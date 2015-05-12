@@ -1,0 +1,28 @@
+::
+::::  /hook/gate/fp/cat
+  ::
+/?  314
+::
+::::
+!:  =<
+|=  [* [~ ~]]
+:-  %noun  "..."
+::
+|%
+++  fn  ::  float, infinity, or NaN
+        ::  s is sign, e is exponent, a is arithmetic form
+        ::  (-1)^s * a * 2^e
+        ::  c=& : signalling NaN, c=| : quiet NaN
+        $%  [%f s=? e=@s a=@u]
+            [%i s=?]
+            [%n c=?]
+        ==
+::
+++  fl
+  |_  [p=@u w=@u r=?(%n %u %d %z)]
+  ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT)
+  ::  w=width: number of bits in exponent
+  ::  rounding modes: round to nearest, round up, round down, round to 0
+  ++  q  !!
+  --
+--
