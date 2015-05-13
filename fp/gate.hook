@@ -25,25 +25,86 @@
   |_  [p=@u v=@s w=@u r=?(%n %u %d %z)]
   ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT!!)
   ::  v=minimum value of e
-  ::  w=width: max-min value of e
+  ::  w=width: max - min value of e
   ::  r=rounding mode: round to nearest, round up, round down, round to 0
   ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
-  ++  con
+  ++  m
     |%
-    ++  emn  (sum:si v (sun:si (sub p 1)))
+    ::  do not put 0s into these
+    ++  rou  |=  [a=[e=@s a=@u]]  ^-  fn
+             ?:  =((cmp:si (log a) v) -1)
+               ?+  r  [%f & zer]
+                 %u  [%f & spd]
+                 %n  ?:  (lte a [(dif:si v --1) 1])
+                   [%f & zer]  [%f & spd]
+               ==
+             !!
+    ::
+    ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+             ?.  =((log a) (log b))  |
+             ?:  =((cmp:si e.a e.b) -1)
+               =((lsh 0 (abs:si (dif:si e.a e.b)) a.b) a.a)
+             =((lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+    ::
+    ++  lth  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+             ?:  =(e.a e.b)  (^^lth a.a a.b)
+             =+  c=(cmp:si (log a) (log b))
+             ?:  =(c -1)  &  ?:  =(c --1)  |
+             ?:  =((cmp:si e.a e.b) -1)
+               (^^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+             (^^lth (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+    ::
+    ++  lte  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+             ?:  =(e.a e.b)  (^^lte a.a a.b)
+             =+  c=(cmp:si (log a) (log b))
+             ?:  =(c -1)  &  ?:  =(c --1)  |
+             ?:  =((cmp:si e.a e.b) -1)
+               (^^lte a.a (lsh 0 (abs:si (dif:si e.a e.b)) a.b))
+             (^^lte (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+    ::
+    ++  log  |=  [a=[e=@s a=@u]]
+             (sum:si (sun:si (dec (met 0 a.a))) e.a)
+    ::
+    ++  uni  |=  [a=[e=@s a=@u]]
+             ?<  =(a.a 0)
+             |-  ?:  =((end 0 1 a.a) 1)  a
+             $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
+    ::
+    ++  emn  (sum:si v (sun:si (dec p)))
     ++  emx  (sum:si emn (sun:si w))
     ++  uex  (sum:si v (sun:si w))
-    ++  spd  [%f v 1]                                   ::  smallest pos. "denormal" number
-    ++  spn  [%f emn 1]                                 ::  smallest pos. "normal" number
-    ++  lfn  [%f uex (fil 0 p 1)]                       ::  largest finite number
+    ++  spd  [v 1]                                      ::  smallest "denormal"
+    ++  spn  [emn 1]                                    ::  smallest "normal"
+    ++  lfn  [uex (fil 0 p 1)]                          ::  largest
+    ++  zer  [--0 0]                                    ::  zero
     --
   ::
-  ::  if a.a!=0, 2^mag(a) <= |a| < 2^(mag(a) + 1)
-  ::  helps optimize comparison tests
-  ::  so we don't do really big shifts for no reason
-  ++  mag  |=  [a=fn]  ^-  @s
-           ?>  ?=([%f *] a)
-           (sum:si (sun:si (dec (met 0 a.a))) e.a)
+  ++  rou  |=  [a=fn]  ^-  fn
+           ?.  ?=([%f *] a)  a
+           ?~  a.a  [%f s.a --0 0]
+           ?:  =(s.a |)
+             ?:  =(r %u)  (fli =.(r %d (rou:m +>.a)))
+             ?:  =(r %d)  (fli =.(r %u (rou:m +>.a)))
+             (fli (rou:m +>.a))
+           (rou:m +>.a)
+  ::
+  ++  fli  |=  [a=fn]  ^-  fn
+           ?-(-.a %f a(s s.a), %i a(s s.a), %n a)
+  ::
+  ++  add  |=  [a=fn b=fn]  ^-  fn
+           !!
+  ::
+  ++  sub  |=  [a=fn b=fn]  ^-  fn
+           !!
+  ::
+  ++  mul  |=  [a=fn b=fn]  ^-  fn
+           !!
+  ::
+  ++  div  |=  [a=fn b=fn]  ^-  fn
+           !!
+  ::
+  ++  sqt  |=  [a=fn]  ^-  fn
+           !!
   ::
   ++  equ  |=  [a=fn b=fn]  ^-  (unit ,?)
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
@@ -51,10 +112,8 @@
            ?:  |(?=([%i *] a) ?=([%i *] b))  |
            ?:  |(=(a.a 0) =(a.b 0))
              ?:  &(=(a.a 0) =(a.b 0))  &  |
-           ?:  |(=(e.a e.b) !=(s.a s.b) !=((mag a) (mag b)))  |
-           ?:  =((cmp:si e.a e.b) -1)                   ::  e.a < e.b
-             =((lsh 0 (abs:si (dif:si e.a e.b)) a.b) a.a)
-           =((lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+           ?:  |(=(e.a e.b) !=(s.a s.b))  |
+           (equ:m +>.a +>.b)
   ::
   ++  lth  |=  [a=fn b=fn]  ^-  (unit ,?)
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
@@ -65,12 +124,7 @@
              ?:  =(a.a 0)  s.b  !s.a
            ?:  !=(s.a s.b)  s.b
            |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
-           ?:  =(e.a e.b)  (^lth a.a a.b)
-           =+  c=(cmp:si (mag a) (mag b))
-           ?:  =(c -1)  &  ?:  =(c --1)  |
-           ?:  =((cmp:si e.a e.b) -1)
-             (^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
-           (^lth (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+           (lth:m +>.a +>.b)
   ::
   ++  lte  |=  [a=fn b=fn]  ^-  (unit ,?)
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
@@ -81,12 +135,7 @@
              ?:  =(a.a 0)  s.b  !s.a
            ?:  !=(s.a s.b)  s.b
            |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
-           ?:  =(e.a e.b)  (^lth a.a a.b)
-           =+  c=(cmp:si (mag a) (mag b))
-           ?:  =(c -1)  &  ?:  =(c --1)  |
-           ?:  =((cmp:si e.a e.b) -1)
-             (^lte a.a (lsh 0 (abs:si (dif:si e.a e.b)) a.b))
-           (^lte (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
+           (lte:m +>.a +>.b)
   ::
   ++  gth  |=  [a=fn b=fn]  ^-  (unit ,?)  (lth b a)
   ::
@@ -97,12 +146,7 @@
   ::  ++uni but considered equal in comparisons
   ++  uni  |=  [a=fn]  ^-  fn
            ?.  ?=([%f *] a)  a
-           ?:  =(a.a 0)  [%f s.a --0 0]
-           |-  ^-  fn
-           ?:  =((dis a.a 1) 1)  a
-           $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
-  ::
-  ++  rnd  |=  [a=fn]
-           !!
+           ?:  =(a.a 0)  [%f s.a zer:m]
+           [%f s.a (uni:m +>.a)]
   --
 --
