@@ -42,7 +42,7 @@
            ?:  ?=([%i *] a)  !s.a  ?:  ?=([%i *] b)  s.b
            ?:  &(=(a.a 0) =(a.b 0))  |
            ?:  !=(s.a s.b)  s.b
-           |-  ?:  =(s.a |)  ?!($(s.a &, s.b &))
+           |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
            ?:  =(e.a e.b)  (^lth a.a a.b)
            ?:  =((cmp:si e.a e.b) -1)
              (^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
