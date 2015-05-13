@@ -5,8 +5,9 @@
 ::
 ::::
 !:  =<
+=+  f==>(fl .(p 24, v -149, w 253, r %n))
 |=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-:-  %noun  (lte:fl [%f a] [%f b])
+:-  %noun  (lte:f [%f a] [%f b])
 ::|=  [* [[a=[? @s @u] ~] ~]]
 :::-  %noun  (uni:fl [%f a])
 ::
@@ -21,17 +22,36 @@
         ==
 ::
 ++  fl
-  |_  [p=@u w=@u r=?(%n %u %d %z) d=?]
+  |_  [p=@u v=@s w=@u r=?(%n %u %d %z)]
   ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT!!)
-  ::  w=width: number of bits in exponent
+  ::  v=minimum value of e
+  ::  w=width: max-min value of e
   ::  r=rounding mode: round to nearest, round up, round down, round to 0
-  ::  d="denormalized": simulate denormalized for ieee754 compliance
+  ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
+  ++  con
+    |%
+    ++  emn  (sum:si v (sun:si (sub p 1)))
+    ++  emx  (sum:si emn (sun:si w))
+    ++  uex  (sum:si v (sun:si w))
+    ++  spd  [%f v 1]                                   ::  smallest pos. "denormal" number
+    ++  spn  [%f emn 1]                                 ::  smallest pos. "normal" number
+    ++  lfn  [%f uex (fil 0 p 1)]                       ::  largest finite number
+    --
+  ::
+  ::  if a.a!=0, 2^mag(a) <= |a| < 2^(mag(a) + 1)
+  ::  helps optimize comparison tests
+  ::  so we don't do really big shifts for no reason
+  ++  mag  |=  [a=fn]  ^-  @s
+           ?>  ?=([%f *] a)
+           (sum:si (sun:si (dec (met 0 a.a))) e.a)
+  ::
   ++  equ  |=  [a=fn b=fn]  ^-  (unit ,?)
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
            ?:  =(a b)  &
            ?:  |(?=([%i *] a) ?=([%i *] b))  |
-           ?:  &(=(a.a 0) =(a.b 0))  &
-           ?:  |(=(e.a e.b) !=(s.a s.b))  |
+           ?:  |(=(a.a 0) =(a.b 0))
+             ?:  &(=(a.a 0) =(a.b 0))  &  |
+           ?:  |(=(e.a e.b) !=(s.a s.b) !=((mag a) (mag b)))  |
            ?:  =((cmp:si e.a e.b) -1)                   ::  e.a < e.b
              =((lsh 0 (abs:si (dif:si e.a e.b)) a.b) a.a)
            =((lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
@@ -40,10 +60,14 @@
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
            ?:  =(a b)  |
            ?:  ?=([%i *] a)  !s.a  ?:  ?=([%i *] b)  s.b
-           ?:  &(=(a.a 0) =(a.b 0))  |
+           ?:  |(=(a.a 0) =(a.b 0))
+             ?:  &(=(a.a 0) =(a.b 0))  |
+             ?:  =(a.a 0)  s.b  !s.a
            ?:  !=(s.a s.b)  s.b
            |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
            ?:  =(e.a e.b)  (^lth a.a a.b)
+           =+  c=(cmp:si (mag a) (mag b))
+           ?:  =(c -1)  &  ?:  =(c --1)  |
            ?:  =((cmp:si e.a e.b) -1)
              (^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
            (^lth (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
@@ -52,10 +76,14 @@
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
            ?:  =(a b)  &
            ?:  ?=([%i *] a)  !s.a  ?:  ?=([%i *] b)  s.b
-           ?:  &(=(a.a 0) =(a.b 0))  &
+           ?:  |(=(a.a 0) =(a.b 0))
+             ?:  &(=(a.a 0) =(a.b 0))  &
+             ?:  =(a.a 0)  s.b  !s.a
            ?:  !=(s.a s.b)  s.b
            |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
-           ?:  =(e.a e.b)  (^lte a.a a.b)
+           ?:  =(e.a e.b)  (^lth a.a a.b)
+           =+  c=(cmp:si (mag a) (mag b))
+           ?:  =(c -1)  &  ?:  =(c --1)  |
            ?:  =((cmp:si e.a e.b) -1)
              (^lte a.a (lsh 0 (abs:si (dif:si e.a e.b)) a.b))
            (^lte (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
@@ -64,6 +92,9 @@
   ::
   ++  gte  |=  [a=fn b=fn]  ^-  (unit ,?)  (lte b a)
   ::
+  ::  =((uni a) (uni b)) if and only if (equ a b), with the
+  ::  exception of positive/negative 0, which are distinct in
+  ::  ++uni but considered equal in comparisons
   ++  uni  |=  [a=fn]  ^-  fn
            ?.  ?=([%f *] a)  a
            ?:  =(a.a 0)  [%f s.a --0 0]
