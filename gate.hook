@@ -5,12 +5,14 @@
 ::
 ::::
 !:  =<
-|=  [* [~ ~]]
-:-  %noun  "..."
+::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
+:::-  %noun  (cmp:fl [%f a] `fn`[%f b])
+|=  [* [[a=[? @s @u] ~] ~]]
+:-  %noun  (uni:fl [%f a])
 ::
 |%
 ++  fn  ::  float, infinity, or NaN
-        ::  s is sign, e is exponent, a is arithmetic form
+        ::  s=sign, e=exponent, a=arithmetic form
         ::  (-1)^s * a * 2^e
         ::  c=& : signalling NaN, c=| : quiet NaN
         $%  [%f s=? e=@s a=@u]
@@ -19,10 +21,44 @@
         ==
 ::
 ++  fl
-  |_  [p=@u w=@u r=?(%n %u %d %z)]
-  ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT)
+  |_  [p=@u w=@u r=?(%n %u %d %z) d=?]
+  ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT!!)
   ::  w=width: number of bits in exponent
-  ::  rounding modes: round to nearest, round up, round down, round to 0
-  ++  q  !!
+  ::  r=rounding mode: round to nearest, round up, round down, round to 0
+  ::  d="denormalized": simulate denormalized for ieee754 compliance
+  ++  equ  |=  [a=fn b=fn]  ^-  (unit ,?)
+           ?:  |(?=([%n *] a) ?=([%n *] b))  ~
+           ?:  =(a b)  (some &)
+           ?:  |(?=([%i *] a) ?=([%i *] b))  (some |)
+           ?:  &(=(a.a 0) =(a.b 0))  (some &)
+           ?.  =(s.a s.b)  (some |)
+           ?:  =(e.a e.b)  (some |)
+           ?:  =((cmp:si e.a e.b) -1)                   ::  e.a < e.b
+             =+  i=(abs:si (dif:si e.b e.a))
+             (some &(=((end 0 i a.a) 0) =((rsh 0 i a.a) a.b)))
+           =+  i=(abs:si (dif:si e.a e.b))
+           (some &(=((end 0 i a.b) 0) =((rsh 0 i a.b) a.a)))
+  ::
+  ++  lth  |=  [a=fn b=fn]  ^-  (unit ,?)
+           ?:  |(?=([%n *] a) ?=([%n *] b))  ~
+           ?:  =(a b)  (some |)
+           ?:  ?=([%i *] a)
+             ?:  ?=([%i *] b)  (some &(!s.a s.b))
+             (some !s.a)
+           ?:  ?=([%i *] b)  (some s.b)
+           ?:  &(=(a.a 0) =(a.b 0))  (some |)
+           ?:  &(!s.a s.b)  (some &)
+           ?:  &(s.a !s.b)  (some |)  !!
+
+  ::
+  ++  uni  |=  [a=fn]  ^-  fn
+           ?.  ?=([%f *] a)  a
+           ?:  =(a.a 0)  [%f s.a --0 0]
+           |-  ^-  fn
+           ?:  =((dis a.a 1) 1)  a
+           $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
+  ::
+  ++  rnd  |=  [a=fn]
+           !!
   --
 --
