@@ -5,7 +5,7 @@
 ::
 ::::
 !:  =<
-=+  f==>(fl .(p 24, v -149, w 253, r %z))
+=+  f==>(fl .(p 24, v -149, w 253, r %u))
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 :::-  %noun  (lte:f [%f a] [%f b])
 |=  [* [[a=[? @s @u] ~] ~]]
@@ -69,7 +69,7 @@
              ?<  =(a.a 0)
              |-  ?:  =((end 0 1 a.a) 1)  a
              $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
-    ::
+    :: 
     ::  largest float smaller than or equal to a
     ::  assume that inputs are ++uni'd (least significant digit is 1!)
     ++  flr  |=  [a=[e=@s a=@u]]  ^-  fn
@@ -86,7 +86,19 @@
     ::  smallest float larger than or equal to a
     ::  assume inputs uni'd
     ++  cei  |=  [a=[e=@s a=@u]]
-             !! 
+             =+  m=(met 0 a.a)  =+  f=(^gth m p)
+             =+  ^=  b  ?.  f  a                        ::  reduce precision
+               =+  (^sub m p)  a(e (sum:si e.a (sun:si -)), a (rsh 0 - a.a))
+             =+  g==((cmp:si e.b v) -1)
+             =+  ^=  c  ?.  g  b                        ::  enforce min. exp
+               =+  (dif:si v e.b)  b(e (sum:si e.b -), a (rsh 0 (abs:si -) a.b))
+             ?:  =(a.c 0)  [%f & spd]
+             =+  ^=  d  ?.  |(f g)  c                   ::  if flagged, increment
+               =+  (min (abs:si (dif:si e.c v)) (^sub p (met 0 a.c)))
+               (uni c(e (dif:si e.c (sun:si -)), a +((lsh 0 - a.c))))
+             =+  ^=  e  ?.  =((cmp:si e.d uex) --1)  d  ::  enforce max. exp
+               d(e uex, a (lsh 0 (abs:si (dif:si e.d uex)) a.d))
+             ?:  (^gth (met 0 a.e) p)  [%i &]  [%f & e]
     ::
     ::  nearest float to a, round to even
     ::  assume inputs uni'd
