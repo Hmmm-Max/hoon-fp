@@ -5,7 +5,7 @@
 ::
 ::::
 !:  =<
-=+  f==>(fl .(p 24, v -149, w 253, r %n))
+=+  f==>(fl .(p 24, v -149, w 253, r %u))
 |=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 :-  %noun  (add:f [%f a] [%f b])
 ::|=  [* [[a=[? @s @u] ~] ~]]
@@ -41,8 +41,14 @@
     ++  add  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              =+  q=(dif:si e.a e.b)
              |-  ?.  (syn:si q)  $(b a, a b, q +(q))    ::  a has larger exponent
-             ::?:  (^gth (abs:si q) (^^add p (met 0 a.b)))
-             ::  ?:  =(r %u)  (lag a %lg)  (rou a)
+             =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
+             =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
+               ?:  (^gth p ma)  (^^sub p ma)  0
+             =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
+               ?:  =(r %n)  mb  (dec mb)                ::  avoid halfway matches for nearest rd
+             ?:  =((cmp:si w x) --1)                    ::  don't need to bother performing add
+               ?:  =(r %u)  (lag a %lg)
+               (rou a)
              %-  rou
                [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)]
     ::
@@ -79,6 +85,11 @@
              |-  ?:  =((end 0 1 a.a) 1)  a
              $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
     ::
+    ::  assumes that (met 0 a.a) <= p!!
+    ++  xpd  |=  [a=[e=@s a=@u]]
+             =+  (min (abs:si (dif:si e.a v)) (^^sub p (met 0 a.a)))
+             a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
+    ::
     ::  in order: floor, ceiling, nearest, larger, smaller
     ++  lag  |=  [a=[e=@s a=@u] t=?(%fl %ce %nr %lg %sm)]  ^-  fn
              =+  m=(met 0 a.a)
@@ -105,10 +116,7 @@
                  %nr  [%f & ?:((^^lte x y) zer spd)]
                ==
              ::
-             =.  b                                      ::  expand
-               ?.  =(t %fl)  b
-               =+  (min (abs:si (dif:si e.b v)) (^^sub p (met 0 a.b)))
-               b(e (dif:si e.b (sun:si -)), a (lsh 0 - a.b))
+             =.  b  ?:  =(t %fl)  b  (xpd b)            ::  expand
              ::
              =.  b  %-  uni
                ?-  t
