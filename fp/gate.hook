@@ -114,9 +114,9 @@
              |-  ?:  =((end 0 1 a.a) 1)  a
              $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
     ::
-    ::  assumes that (met 0 a.a) <= p!!
+    ::  assumes that (met 0 a.a) <= prc and emn <= e.a!!
     ++  xpd  |=  [a=[e=@s a=@u]]
-             =+  (min (abs:si (dif:si e.a v)) (^^sub prc (met 0 a.a)))
+             =+  (min (abs:si (dif:si e.a emn)) (^^sub prc (met 0 a.a)))
              a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
     ::  in order: floor, ceiling, nearest, larger, smaller
@@ -127,7 +127,7 @@
                =+  ^=  f                                ::  reduce precision
                  ?:  (^gth m prc)  (^^sub m prc)  0
                =+  ^=  g  %-  abs:si                    ::  enforce min. exp
-                 ?:  =((cmp:si e.a v) -1)  (dif:si v e.a)  --0
+                 ?:  =((cmp:si e.a emn) -1)  (dif:si emn e.a)  --0
                (max f g)
              =^  b  a  :-  (end 0 q a.a)
              a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
@@ -167,8 +167,8 @@
     ::++  emn  (sum:si v (sun:si (dec p)))
     ::++  emx  (sum:si emn (sun:si w))
     ::++  uex  (sum:si v (sun:si w))
-    ++  spd  [v 1]                                      ::  smallest "denormal"
-    ++  spn  [emn 1]                                    ::  smallest "normal"
+    ++  spd  [emn 1]                                    ::  smallest "denormal"
+    ++  spn  [(sum:si v (sun:si (dec p))) 1]            ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
     ++  zer  [--0 0]                                    ::  zero
     --
