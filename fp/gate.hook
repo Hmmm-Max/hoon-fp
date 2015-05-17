@@ -7,7 +7,7 @@
 !:  =<
 =+  f==>(fl .(p 24, v -149, w 253, r %u))
 |=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-:-  %noun  (add:f [%f a] [%f b])
+:-  %noun  (mul:f [%f a] [%f b])
 ::|=  [* [[a=[? @s @u] ~] ~]]
 :::-  %noun  (rou:f [%f a])
 ::
@@ -42,18 +42,47 @@
              =+  q=(dif:si e.a e.b)
              |-  ?.  (syn:si q)  $(b a, a b, q +(q))    ::  a has larger exponent
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
+             ~&  "a: {<a>} || b: {<b>} || ma: {<ma>} || mb: {<mb>}"
              =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
-               ?:  (^gth p ma)  (^^sub p ma)  0
+               ?:  (^gth prc ma)  (^^sub prc ma)  0
+             ~&  "expanded exponent of a: {<w>}"
              =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
                ?:  =(r %n)  mb  (dec mb)                ::  avoid halfway matches for nearest rd
-             ?:  =((cmp:si w x) --1)                    ::  don't need to bother performing add
-               ?:  =(r %u)  (lag a %lg)
-               (rou a)
-             %-  rou
-               [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)]
+             ~&  "highest exponent that b reaches: {<x>}"
+             ?:  =((cmp:si w x) --1)                    ::  don't actually need to add
+               ?+  r  (lag a %fl)
+                 %n  (lag a %nr)  %u  (lag a %lg)
+               ==
+             ~&  "last step: {<[e.b (^^add (lsh 0 (abs:si q) a.a) a.b)]>}"
+             (rou [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)])
     ::
     ++  sub  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
-             !!
+             =+  q=(dif:si e.a e.b)
+             |-  ?.  (syn:si q)                         ::  a has larger exponent
+               (fli $(b a, a b, q +(q), r swr))
+             =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
+             ~&  "a: {<a>} || b: {<b>} || ma: {<ma>} || mb: {<mb>}"
+             =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
+               ?:  (^gth prc ma)  (^^sub prc ma)  0
+             ~&  "expanded exponent of a: {<w>}"
+             =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
+               ?:  =(r %n)  +(mb)  mb                   ::  need one more gap digit than addition
+             ~&  "highest exponent that b reaches: {<x>}"
+             ?:  =((cmp:si w x) --1)                    ::  don't actually need to sub
+               ?+  r  (lag a %sm)
+                 %n  (lag a %nr)  %u  (lag a %ce) 
+               ==
+             =+  j=(lsh 0 (abs:si q) a.a)
+             |-  ?.  (^gte j a.b)  (fli $(a.b j, j a.b, r swr))
+             =+  i=(^^sub j a.b)
+             ~&  "last step: {<[e.b i]>}"
+             ?~  -  [%f & zer]  (rou [e.b -])
+    ::
+    ++  mul  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+             (rou (sum:si e.a e.b) (^^mul a.a a.b))
+    ::
+    ++  div  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+             !! 
     ::
     ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
              ?.  =((log a) (log b))  |
@@ -87,62 +116,60 @@
     ::
     ::  assumes that (met 0 a.a) <= p!!
     ++  xpd  |=  [a=[e=@s a=@u]]
-             =+  (min (abs:si (dif:si e.a v)) (^^sub p (met 0 a.a)))
+             =+  (min (abs:si (dif:si e.a v)) (^^sub prc (met 0 a.a)))
              a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
     ::  in order: floor, ceiling, nearest, larger, smaller
     ++  lag  |=  [a=[e=@s a=@u] t=?(%fl %ce %nr %lg %sm)]  ^-  fn
              =+  m=(met 0 a.a)
              ::
-             =+  f=(^gth m p)
-             =+  q=?:(f (^^sub m p) 0)
-             =+  ^=  b  ?.  f  a                        ::  reduce precision
-               a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
+             =+  ^=  q
+               =+  ^=  f                                ::  reduce precision
+                 ?:  (^gth m prc)  (^^sub m prc)  0
+               =+  ^=  g  %-  abs:si                    ::  enforce min. exp
+                 ?:  =((cmp:si e.a v) -1)  (dif:si v e.a)  --0
+               (max f g)
+             =^  b  a  :-  (end 0 q a.a)
+             a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
              ::
-             =+  g==((cmp:si e.b v) -1)
-             =+  r=?:(g (dif:si v e.b) --0)
-             =.  b  ?.  g  b                            ::  enforce min. exp
-               b(e (sum:si e.b r), a (rsh 0 (abs:si r) a.b))
-             ::
-             ::  x is the digits that were removed, w is the length.
-             ::  from this point on, we don't lose any precision.
-             =+  w=(^^add q (abs:si r))
-             =+  [x=(end 0 w a.a) y=?~(w 0 (bex (dec w)))]
-             ::
-             ?:  =(a.b 0)
-               ?-  t
+             ?~  a.a  ?-  t
                  %fl  [%f & zer]  %sm  [%f & zer]
                  %ce  [%f & spd]  %lg  [%f & spd]
-                 %nr  [%f & ?:((^^lte x y) zer spd)]
+                 %nr  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
                ==
              ::
-             =.  b  ?:  =(t %fl)  b  (xpd b)            ::  expand
+             =.  a  ?:  =(t %fl)  a  (xpd a)            ::  expand
              ::
-             =.  b  %-  uni
+             =.  a  %-  uni
                ?-  t
-                 %fl  b
-                 %ce  ?.  &(|(f g) !=(x 0))  b  b(a +(a.b))
-                 %nr  ?.  &(|(f g) !=(x 0))  b
-                      ?:  =(x y)                        ::  halfway rounds to even
-                        ?:  =((dis a.b 1) 0)  b  b(a +(a.b))
-                      ?:  (^^lth x y)  b  b(a +(a.b))
-                 %sm  ?:  =(x 0)  b(a (dec a.b))  b
-                 %lg  b(a +(a.b))
+                 %fl  a
+                 %ce  ?~  b  a  a(a +(a.a))
+                 %nr  ?~  b  a
+                      =+  y=(bex (dec q))
+                      ?:  =(b y)                        ::  halfway rounds to even
+                        ?~  (dis a.a 1)  a  a(a +(a.a))
+                      ?:  (^^lth b y)  a  a(a +(a.a))
+                 %sm  ?~  b  a(a (dec a.a))  a
+                 %lg  a(a +(a.a))
                ==
-             ?:  =(a.b 0)  [%f & zer]
+             ?~  a.a  [%f & zer]
              ::
-             =.  b  ?.  =((cmp:si e.b uex) --1)  b      ::  enforce max. exp
-               b(e uex, a (lsh 0 (abs:si (dif:si e.b uex)) a.b))
+             =+  x=(dif:si e.a emx)
+             =.  a  ?.  (syn:si x)  a                   ::  enforce max. exp
+               a(e emx, a (lsh 0 (abs:si x) a.a))
              ::
-             ?:  (^gth (met 0 a.b) p)  [%i &]  [%f & b]
+             ?:  (^gth (met 0 a.a) prc)  [%i &]  [%f & a]
     ::
     ++  swr  ?+(r r %d %u, %u %d)
-    ++  emn  (sum:si v (sun:si (dec p)))
-    ++  emx  (sum:si emn (sun:si w))
-    ++  uex  (sum:si v (sun:si w))
+    ++  prc  p
+    ++  emn  v
+    ++  emx  (sum:si v (sun:si w))
+    ::++  emn  (sum:si v (sun:si (dec p)))
+    ::++  emx  (sum:si emn (sun:si w))
+    ::++  uex  (sum:si v (sun:si w))
     ++  spd  [v 1]                                      ::  smallest "denormal"
     ++  spn  [emn 1]                                    ::  smallest "normal"
-    ++  lfn  [uex (fil 0 p 1)]                          ::  largest
+    ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
     ++  zer  [--0 0]                                    ::  zero
     --
   ::
@@ -173,7 +200,37 @@
   ++  sub  |=  [a=fn b=fn]  ^-  fn  (add a (fli b))
   ::
   ++  mul  |=  [a=fn b=fn]  ^-  fn
-           !!
+           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n |]
+           ?:  ?=([%i *] a)
+             ?:  ?=([%i *] b)  [%i =(s.a s.b)]
+             ?:  =(a.b 0)  [%n |]  [%i =(s.a s.b)]
+           ?:  ?=([%i *] b)
+             ?:  =(a.a 0)  [%n |]  [%i =(s.a s.b)]
+           ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
+           ?:  =(s.a s.b)  (mul:m +>.a +>.b)
+           =.(r swr:m (fli (mul:m +>.a +>.b)))
+  ::
+  ++  div  |=  [a=fn b=fn]  ^-  fn
+           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n |]
+           ?:  ?=([%i *] a)
+             ?:  ?=([%i *] b)  [%n |]  [%i =(s.a s.b)]
+           ?:  ?=([%i *] b)  [%f =(s.a s.b) --0 0]
+           ?:  =(a.a 0)  ?:  =(a.b 0)  [%n |]  [%f =(s.a s.b) --0 0]
+           ?:  =(a.b 0)  [%i =(s.a s.b)]
+           ?:  =(s.a s.b)  (div:m +>.a +>.b)
+           =.(r swr.m (fli (div:m +>.a +>.b)))
+  ::
+  ++  fma  |=  [a=fn b=fn c=fn]  ^-  fn                 ::  a * b + c
+           ?:  |(?=([%n *] a) ?=([%n *] b) ?=([%n *] c))  [%n |]
+           =+  ^=  x
+             ?:  ?=([%i *] a)
+             ?:  ?=([%i *] b)  [%i =(s.a s.b)]
+               ?:  =(a.b 0)  [%n |]  [%i =(s.a s.b)]
+             ?:  ?=([%i *] b)
+               ?:  =(a.a 0)  [%n |]  [%i =(s.a s.b)]
+             ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
+             [%f =(s.a s.b) (sum:si e.a e.b) (^mul a.a a.b)]
+           (add x c)
   ::
   ++  div  |=  [a=fn b=fn]  ^-  fn
            !!
