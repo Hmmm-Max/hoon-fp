@@ -5,14 +5,14 @@
 ::
 ::::
 !:  =<
-|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-::
 =+  fn==>(fl .(p 24, v -149, w 253, r %n))
-=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
-:-  %noun  "n: {<(div:fn [%f a] [%f b])>} || u: {<(div:fu [%f a] [%f b])>} || d: {<(div:fd [%f a] [%f b])>} || z: {<(div:fz [%f a] [%f b])>} || a: {<(div:fa [%f a] [%f b])>}"
 ::
-::|=  [* [[a=[? @s @u] ~] ~]]
-:::-  %noun  (rou:fn [%f a])
+|=  [* [[a=[@s @u] ~] ~]]
+:-  %noun  (sqt:m:fn a)
+::
+::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
+::=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
+:::-  %noun  "n: {<(div:fn [%f a] [%f b])>} || u: {<(div:fu [%f a] [%f b])>} || d: {<(div:fd [%f a] [%f b])>} || z: {<(div:fz [%f a] [%f b])>} || a: {<(div:fa [%f a] [%f b])>}"
 ::
 |%
 ++  fn  ::  float, infinity, or NaN
@@ -83,10 +83,11 @@
              ::~&  "last step: {<[e.b i]>}"
              ?~  -  [%f & zer]  (rou [e.b -])
     ::
-    ++  mul  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+    ++  mul  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              (rou (sum:si e.a e.b) (^^mul a.a a.b))
     ::
-    ++  div  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+    ::  XX doesnt round right on subnormals
+    ++  div  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
              =+  v=(dif:si (sun:si ma) (sun:si +((^^add mb prc))))
              =.  a  ?:  (syn:si v)  a
@@ -98,13 +99,50 @@
                %n  ?~  (mod a.a a.b)  (lag %ne [j q])  (lag %na [j q])
              ==
     ::
-    ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+    ++  fma  |=  [a=[e=@s a=@u] b=[e=@s a=@u] c=[e=@s a=@u]]  ^-  fn
+             (add [(sum:si e.a e.b) (^^mul a.a a.b)] c)
+    ::
+    ++  fms  |=  [a=[e=@s a=@u] b=[e=@s a=@u] c=[e=@s a=@u] d=?]  ^-  fn
+             ?:  d  (sub [(sum:si e.a e.b) (^^mul a.a a.b)] c)
+             (sub c [(sum:si e.a e.b) (^^mul a.a a.b)])
+    ::
+    ::  sqrt((rsh 1 b a))
+    ++  isr  |=  [a=@ b=@]  ^-  [@ ?(%e %d %h %u)]
+             =.  a  (lsh 1 1 a)  =.  b  +(b)
+             =+  [q=(^^div (dec (xeb a)) 2) r=0]
+             =+  ^=  c
+               |-  =+  s=(^^add r (bex q))
+               =+  (^^mul s s)
+               ?:  |(=(q 0) =(q b))
+                 ?:  (^^lte - a)  [s -]  [r (^^mul r r)]
+               ?:  (^^lte - a)  $(r s, q (dec q))  $(q (dec q))
+             =+  z=(rsh 0 b -.c)
+             ?:  =(+.c a)  [z %e]
+             =+  v=(^^add -.c (lsh 0 (dec b) 1))
+             =+  y=(^^mul v v)
+             ?:  =(y a)  [z %h]  ?:((^^lth y a) [z %u] [z %d])
+    ::
+    ++  sqt  |=  [a=[e=@s a=@u]]  ^-  fn
+             =+  q=(sun:si (^^mul prc 2))
+             =^  ma  a
+               =+  ma=(met 0 a.a)
+               =+  ^=  v
+                 ?.  =((cmp:si (sun:si ma) q) -1)  0
+                 (abs:si (dif:si (sun:si ma) q))
+               =+  w=(max v (dis (abs:si e.a) 1))       ::  exponent must be even
+               :_  a(e (dif:si e.a (sun:si w)), a (lsh 0 w a.a))
+               (^^add ma w)
+             ~&  [a (rsh 0 1 (^^sub ma prc))]
+             =+  b=(isr a.a (rsh 0 1 (^^sub ma prc)))
+             [%f & (fra:si e.a --2) -.b]
+    ::
+    ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?.  =((log a) (log b))  |
              ?:  =((cmp:si e.a e.b) -1)
                =((lsh 0 (abs:si (dif:si e.a e.b)) a.b) a.a)
              =((lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
     ::
-    ++  lth  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+    ++  lth  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?:  =(e.a e.b)  (^^lth a.a a.b)
              =+  c=(cmp:si (log a) (log b))
              ?:  =(c -1)  &  ?:  =(c --1)  |
@@ -112,7 +150,7 @@
                (^^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
              (^^lth (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
     ::
-    ++  lte  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]
+    ++  lte  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?:  =(e.a e.b)  (^^lte a.a a.b)
              =+  c=(cmp:si (log a) (log b))
              ?:  =(c -1)  &  ?:  =(c --1)  |
@@ -120,7 +158,7 @@
                (^^lte a.a (lsh 0 (abs:si (dif:si e.a e.b)) a.b))
              (^^lte (lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
     ::
-    ++  log  |=  [a=[e=@s a=@u]]
+    ++  log  |=  [a=[e=@s a=@u]]  ^-  @s
              (sum:si (sun:si (dec (met 0 a.a))) e.a)
     ::
     ++  uni  |=  [a=[e=@s a=@u]]
@@ -178,9 +216,10 @@
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  p
     ++  emn  v
+    ++  emm  (sum:si emn (sun:si (dec p)))
     ++  emx  (sum:si emn (sun:si w))
     ++  spd  [emn 1]                                    ::  smallest "denormal"
-    ++  spn  [(sum:si emn (sun:si (dec p))) 1]          ::  smallest "normal"
+    ++  spn  [emm 1]                                    ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
     ++  zer  [--0 0]                                    ::  zero
     --
@@ -245,7 +284,11 @@
            (add x c)
   ::
   ++  sqt  |=  [a=fn]  ^-  fn
-           !!
+           ?:  ?=([%n *] a)  [%n |]
+           ?:  ?=([%i *] a)  ?:(s.a a [%n |])
+           ?~  a.a  [%f s.a --0 0]
+           ?.  s.a  [%n |]
+           (sqt:m +>.a)
   ::
   ++  equ  |=  [a=fn b=fn]  ^-  (unit ,?)
            ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
