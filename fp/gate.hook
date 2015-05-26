@@ -25,7 +25,7 @@
         ==
 ::
 ++  fl
-  |_  [p=@u v=@s w=@u r=?(%n %a %u %d %z)]
+  |_  [p=@u v=@s w=@u r=?(%n %u %d %z %a)]
   ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT!!)
   ::  v=minimum value of e
   ::  w=width: max - min value of e
@@ -52,7 +52,7 @@
                ?:  (^gth prc ma)  (^^sub prc ma)  0
              ::~&  "expanded exponent of a: {<w>}"
              =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
-               ?:  =(r %n)  mb  (dec mb)                ::  avoid halfway matches for nearest rd
+               ?:  |(=(r %n) =(r %a))  mb  (dec mb)     ::  avoid halfway matches for nearest rd
              ::~&  "highest exponent that b reaches: {<x>}"
              ?:  =((cmp:si w x) --1)                    ::  don't actually need to add
                ?+  r  (lag %fl a)
@@ -71,7 +71,8 @@
                ?:  (^gth prc ma)  (^^sub prc ma)  0
              ::~&  "expanded exponent of a: {<w>}"
              =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
-               ?:  =(r %n)  +(mb)  mb                   ::  need one more gap digit than addition
+::             ?:  |(=(r %n) =(r %a))  +(mb)  mb        ::  need one more gap digit than addition?
+               ?:  |(=(r %n) =(r %a))  mb  (dec mb)
              ::~&  "highest exponent that b reaches: {<x>}"
              ?:  =((cmp:si w x) --1)                    ::  don't actually need to sub
                ?+  r  (lag %sm a)
@@ -86,7 +87,6 @@
     ++  mul  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              (rou (sum:si e.a e.b) (^^mul a.a a.b))
     ::
-    ::  XX doesnt round right on subnormals
     ++  div  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
              =+  v=(dif:si (sun:si ma) (sun:si +((^^add mb prc))))
@@ -122,19 +122,46 @@
              =+  y=(^^mul v v)
              ?:  =(y a)  [z %h]  ?:((^^lth y a) [z %u] [z %d])
     ::
+    ++  frd  |=  [a=@s]                                 ::  a/2, rounds to -inf
+             =+  b=(old:si a)
+             ?:  |(-.b =((end 0 1 +.b) 0))
+               (new:si -.b (rsh 0 1 +.b))
+             (new:si -.b +((rsh 0 1 +.b)))
+    ::
     ++  sqt  |=  [a=[e=@s a=@u]]  ^-  fn
-             =+  q=(sun:si (^^mul prc 2))
-             =^  ma  a
-               =+  ma=(met 0 a.a)
-               =+  ^=  v
-                 ?.  =((cmp:si (sun:si ma) q) -1)  0
-                 (abs:si (dif:si (sun:si ma) q))
-               =+  w=(max v (dis (abs:si e.a) 1))       ::  exponent must be even
-               :_  a(e (dif:si e.a (sun:si w)), a (lsh 0 w a.a))
-               (^^add ma w)
-             ~&  [a (rsh 0 1 (^^sub ma prc))]
-             =+  b=(isr a.a (rsh 0 1 (^^sub ma prc)))
-             [%f & (fra:si e.a --2) -.b]
+             =+  v=(log a)
+             ::      2^v <=      a  < 2^(  v + 1)
+             ::  2^(v/2) <= sqrt(a) < 2^(v/2 + 1)
+             ::  sqrt(a) will have min(prc, v/2-emn+1) digits
+             ::
+             ::  if sqrt(a) < 2^(emn - 1) in other words v/2 < emn - 1
+             ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
+               [%f & ?:(=(r %u) spd zer)]
+             ::
+             ~&  ""  
+             ~&  "a: {<a>}"
+             =.  a  =+  [w=(met 0 a.a) x=(^^mul prc 2)]
+               =+  ?:((^^lth w x) (^^sub x w) 0)
+               =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
+                 (^^add - 1)                            ::  enforce even exponent
+               a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
+             ::
+             ::  what we want the final precision to be
+             =+  w=(min prc +((abs:si (dif:si (frd v) emn))))
+             ::
+             =+  x=(^^sub (^^div (met 0 a.a) 2) w)
+             =+  [y=(isr a.a x) z=(frd e.a)]
+             ~&  "a: {<a>}"
+             ~&  "w: {<w>} || x: {<x>} || y: {<y>} || z: {<z>}"
+             %-  rou  :-  z
+             ?+  r  -.y
+               %n  ?+  +.a  -.y
+                     %h  ?~((dis -.y 1) -.y +(-.y))
+                     %u  +(-.y)
+                   ==
+               %a  ?+  +.a  -.y  %h  +(-.y)  %u  +(-.y)  ==
+               %u  ?:  =(-.y %e)  -.y  +(-.y)
+             ==
     ::
     ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?.  =((log a) (log b))  |
