@@ -7,7 +7,7 @@
 !:  =<
 =+  fn==>(fl .(p 24, v -149, w 253, r %n))
 ::
-::|=  [* [[a=[?(%fl %ce %ne %na %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
+::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
 :::-  %noun  (lug:m:fn a)
 ::
 |=  [* [[a=[@s @u] ~] ~]]
@@ -15,7 +15,7 @@
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
-:::-  %noun  "n: {<(div:fn [%f a] [%f b])>} || u: {<(div:fu [%f a] [%f b])>} || d: {<(div:fd [%f a] [%f b])>} || z: {<(div:fz [%f a] [%f b])>} || a: {<(div:fa [%f a] [%f b])>}"
+:::-  %noun  "n: {<(add:fn [%f a] [%f b])>} || u: {<(add:fu [%f a] [%f b])>} || d: {<(add:fd [%f a] [%f b])>} || z: {<(add:fz [%f a] [%f b])>} || a: {<(add:fa [%f a] [%f b])>}"
 ::
 |%
 ++  fn  ::  float, infinity, or NaN
@@ -53,18 +53,10 @@
              =+  q=(dif:si e.a e.b)
              |-  ?.  (syn:si q)  $(b a, a b, q +(q))    ::  a has larger exponent
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
-             ::~&  "a: {<a>} || b: {<b>} || ma: {<ma>} || mb: {<mb>}"
              =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
                ?:  (^gth prc ma)  (^^sub prc ma)  0
-             ::~&  "expanded exponent of a: {<w>}"
-             =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
-               ?:  |(=(r %n) =(r %a))  mb  (dec mb)     ::  avoid halfway matches for nearest rd
-             ::~&  "highest exponent that b reaches: {<x>}"
-             ?:  =((cmp:si w x) --1)                    ::  don't actually need to add
-               ?+  r  (lag %fl a)
-                 %n  (lag %ne a)  %u  (lag %lg a)  %a  (lag %na a)
-               ==
-             ::~&  "last step: {<[e.b (^^add (lsh 0 (abs:si q) a.a) a.b)]>}"
+             =+  ^=  x  %+  sum:si  e.b  %-  sun:si  mb ::  highest exponent that b reaches
+             ?:  =((cmp:si w x) --1)  (rau a %d)        ::  don't actually need to add
              (rou [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)])
     ::
     ++  sub  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
@@ -72,23 +64,17 @@
              |-  ?.  (syn:si q)                         ::  a has larger exponent
                (fli $(b a, a b, q +(q), r swr))
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
-             ::~&  "a: {<a>} || b: {<b>} || ma: {<ma>} || mb: {<mb>}"
              =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
                ?:  (^gth prc ma)  (^^sub prc ma)  0
-             ::~&  "expanded exponent of a: {<w>}"
-             =+  ^=  x  %+  sum:si  e.b  %-  sun:si     ::  highest exponent that b reaches
-::             ?:  |(=(r %n) =(r %a))  +(mb)  mb        ::  need one more gap digit than addition?
-               ?:  |(=(r %n) =(r %a))  mb  (dec mb)
-             ::~&  "highest exponent that b reaches: {<x>}"
+             =+  ^=  x  %+  sum:si  e.b  (sun:si mb)    ::  highest exponent that b may affect
              ?:  =((cmp:si w x) --1)                    ::  don't actually need to sub
                ?+  r  (lag %sm a)
-                 %n  (lag %ne a)  %u  (lag %ce a)  %a  (lag %na a)
+                 %n  (lag %nt a)  %a  (lag %nt a)  %u  (lag %ce a)
                ==
              =+  j=(lsh 0 (abs:si q) a.a)
              |-  ?.  (^gte j a.b)  (fli $(a.b j, j a.b, r swr))
              =+  i=(^^sub j a.b)
-             ::~&  "last step: {<[e.b i]>}"
-             ?~  -  [%f & zer]  (rou [e.b -])
+             ?~  i  [%f & zer]  (rou [e.b i])
     ::
     ++  mul  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              (rou (sum:si e.a e.b) (^^mul a.a a.b))
@@ -99,7 +85,6 @@
              =.  a  ?:  (syn:si v)  a
              a(e (sum:si v e.a), a (lsh 0 (abs:si v) a.a))
              =+  [q=(^^div a.a a.b) j=(dif:si e.a e.b)]
-             ::~&  "q: {<q>} || j: {<j>} || r: {<(mod a.a a.b)>}"
              ?+  r  (rou [j q])
                %u  ?~  (mod a.a a.b)  (lag %ce [j q])  (lag %lg [j q])
                %n  ?~  (mod a.a a.b)  (lag %ne [j q])  (lag %na [j q])
@@ -138,13 +123,11 @@
              =+  v=(log a)
              ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
                [%f & ?:(=(r %u) spd zer)]
-             ::
              =.  a  =+  [w=(met 0 a.a) x=(^^mul prc 2)]
                =+  ?:((^^lth w x) (^^sub x w) 0)
                =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
                  (^^add - 1)                            ::  enforce even exponent
                a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
-             ::
              =+  x=(^^sub +((^^div (met 0 a.a) 2)) prc)
              =+  [y=(isr a.a x) z=(sum:si (sun:si x) (frd e.a))]
              (rau [z -.y] +.y)
@@ -184,18 +167,20 @@
              =+  (min (abs:si (dif:si e.a emn)) (^^sub prc (met 0 a.a)))
              a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
-    ::  in order: floor, ceiling, nearest (even, away), larger, smaller
-    ++  lag  |=  [t=?(%fl %ce %ne %na %lg %sm) a=[e=@s a=@u]]  ^-  fn
+    ::  in order: floor, ceiling, nearest (even, away from 0, toward 0), larger, smaller
+    ++  lag  |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u]]  ^-  fn
              (lug t a %e)
     ::
-    ++  lug  |=  [t=?(%fl %ce %ne %na %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
-               ::~&  "t: {<t>} || a: {<a>} || f: {<f>}"
+    ::  %e: a =  a.a    *2^e.a ||  %d:  a.a    *2^e.a < a < (a.a+.5)*2^e.a
+    ::  %h: a = (a.a+.5)*2^e.a ||  %u: (a.a+.5)*2^e.a < a < (a.a+ 1)*2^e.a
+    ++  lug  |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
              ?~  a.a
                ?-  t
-                 %fl  [%f & zer]  %sm  [%f & zer]       ::  warning: [%sm zer %e] gives zero!!
+                 %fl  [%f & zer]  %lg  [%f & spd]
+                 %sm  ?:(=(f %e) !! [%f & zer])
                  %ce  ?:(=(f %e) [%f & zer] [%f & spd])
-                 %lg  [%f & spd]
                  %ne  ?:(=(f %u) [%f & spd] [%f & zer])
+                 %nt  ?:(=(f %u) [%f & spd] [%f & zer])
                  %na  ?:(|(=(f %e) =(f %d)) [%f & zer] [%f & spd])
                ==
              =+  m=(met 0 a.a)
@@ -205,28 +190,30 @@
                  ?:  (^gth m prc)  (^^sub m prc)  0
                =+  ^=  g  %-  abs:si                    ::  enforce min. exp
                  ?:  =((cmp:si e.a emn) -1)  (dif:si emn e.a)  --0
-               ::~&  "f: {<f>} || g: {<g>}"
                (max f g)
              =^  b  a  :-  (end 0 q a.a)
              a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
-             ::~&  "a after reduce precision: {<a>}"
              ::
              ?~  a.a  ?-  t
                  %fl  [%f & zer]  %sm  [%f & zer]
                  %ce  [%f & spd]  %lg  [%f & spd]
-                 %ne  ?:  =(f %e)
-                        [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+                 %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+                      [%f & ?:((^^lth b (bex (dec q))) zer spd)]
+                 %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
                       [%f & ?:((^^lth b (bex (dec q))) zer spd)]
                  %na  [%f & ?:((^^lth b (bex (dec q))) zer spd)]
                ==
              ::
              =.  a  ?:  =(t %fl)  a  (xpd a)            ::  expand
-             ::~&  "a after expand: {<a>}"
              ::
              =.  a  %-  uni
                ?-  t
                  %fl  a  %lg  a(a +(a.a))
-                 %sm  ?:  &(=(b 0) =(f %e))  a(a (dec a.a))  a
+                 %sm  ?.  &(=(b 0) =(f %e))  a
+                      ?:  =(e.a emn)  a(a (dec a.a))    ::  this is a bit awkward
+                      =+  y=(dec (^^mul a.a 2))
+                      ?.  (^^lte (met 0 y) prc)  a(a (dec a.a))
+                      [(dif:si e.a -1) y]
                  %ce  ?:  &(=(b 0) =(f %e))  a  a(a +(a.a))
                  %ne  ?~  b  ?.  =(q 0)  a
                         ?-  f
@@ -237,14 +224,13 @@
                       ?:  &(=(b y) =(f %e))             ::  halfway rounds to even
                         ?~  (dis a.a 1)  a  a(a +(a.a))
                       ?:  (^^lth b y)  a  a(a +(a.a))
-                 %na  ?~  b  ?.  =(q 0)  a
-                        ?-  f
-                          %e  a  %u  a(a +(a.a))
-                          %d  a  %h  a(a +(a.a))
-                        ==
+                 %na  ?~  b  ?.  =(q 0)  a  ?+(f a(a +(a.a)) %e a, %d a)
                       ?:  (^^lth b (bex (dec q)))  a  a(a +(a.a))
+                 %nt  ?~  b  ?.  =(q 0)  a  ?+(f a %u a(a +(a.a)))
+                      =+  y=(bex (dec q))
+                      ?:  =(b y)  ?:  =(f %e)  a  a(a +(a.a))
+                      ?:  (^^lth b y)  a  a(a +(a.a))
                ==
-             ::~&  "a after operation: {<a>}"
              ?~  a.a  [%f & zer]
              ::
              =+  x=(dif:si e.a emx)
