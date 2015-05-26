@@ -7,11 +7,11 @@
 !:  =<
 =+  fn==>(fl .(p 24, v -149, w 253, r %n))
 ::
-|=  [* [[a=[?(%fl %ce %ne %na %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
-:-  %noun  (lug:m:fn a)
+::|=  [* [[a=[?(%fl %ce %ne %na %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
+:::-  %noun  (lug:m:fn a)
 ::
-::|=  [* [[a=[@s @u] ~] ~]]
-:::-  %noun  (sqt:m:fn a)
+|=  [* [[a=[@s @u] ~] ~]]
+:-  %noun  (sqt:m:fn a)
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
@@ -136,27 +136,18 @@
     ::
     ++  sqt  |=  [a=[e=@s a=@u]]  ^-  fn
              =+  v=(log a)
-             ::      2^v <=      a  < 2^(  v + 1)
-             ::  2^(v/2) <= sqrt(a) < 2^(v/2 + 1)
-             ::  sqrt(a) will have min(prc, v/2-emn+1) digits
-             ::
-             ::  if sqrt(a) < 2^(emn - 1) in other words v/2 < emn - 1
              ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
                [%f & ?:(=(r %u) spd zer)]
              ::
-             ~&  ""  
-             ~&  "a: {<a>}"
              =.  a  =+  [w=(met 0 a.a) x=(^^mul prc 2)]
                =+  ?:((^^lth w x) (^^sub x w) 0)
                =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
                  (^^add - 1)                            ::  enforce even exponent
                a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
              ::
-             =+  x=(^^sub (^^div (met 0 a.a) 2) prc)
-             =+  [y=(isr a.a x) z=(frd e.a)]
-             ~&  "a: {<a>}"
-             ~&  "x: {<x>} || y: {<y>} || z: {<z>}"
-             !!
+             =+  x=(^^sub +((^^div (met 0 a.a) 2)) prc)
+             =+  [y=(isr a.a x) z=(sum:si (sun:si x) (frd e.a))]
+             (rau [z -.y] +.y)
     ::
     ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?.  =((log a) (log b))  |
@@ -198,6 +189,7 @@
              (lug t a %e)
     ::
     ++  lug  |=  [t=?(%fl %ce %ne %na %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
+               ::~&  "t: {<t>} || a: {<a>} || f: {<f>}"
              ?~  a.a
                ?-  t
                  %fl  [%f & zer]  %sm  [%f & zer]       ::  warning: [%sm zer %e] gives zero!!
@@ -213,9 +205,11 @@
                  ?:  (^gth m prc)  (^^sub m prc)  0
                =+  ^=  g  %-  abs:si                    ::  enforce min. exp
                  ?:  =((cmp:si e.a emn) -1)  (dif:si emn e.a)  --0
+               ::~&  "f: {<f>} || g: {<g>}"
                (max f g)
              =^  b  a  :-  (end 0 q a.a)
              a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
+             ::~&  "a after reduce precision: {<a>}"
              ::
              ?~  a.a  ?-  t
                  %fl  [%f & zer]  %sm  [%f & zer]
@@ -227,6 +221,7 @@
                ==
              ::
              =.  a  ?:  =(t %fl)  a  (xpd a)            ::  expand
+             ::~&  "a after expand: {<a>}"
              ::
              =.  a  %-  uni
                ?-  t
@@ -249,6 +244,7 @@
                         ==
                       ?:  (^^lth b (bex (dec q)))  a  a(a +(a.a))
                ==
+             ::~&  "a after operation: {<a>}"
              ?~  a.a  [%f & zer]
              ::
              =+  x=(dif:si e.a emx)
