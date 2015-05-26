@@ -61,14 +61,14 @@
     ::
     ++  sub  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
              =+  q=(dif:si e.a e.b)
-             |-  ?.  (syn:si q)                         ::  a has larger exponent
-               (fli $(b a, a b, q +(q), r swr))
+             |-  ?.  (syn:si q)
+             (fli $(b a, a b, q +(q), r swr))
              =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
-             =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
-               ?:  (^gth prc ma)  (^^sub prc ma)  0
-             =+  ^=  x  %+  sum:si  e.b  (sun:si mb)    ::  highest exponent that b may affect
-             ?:  =((cmp:si w x) --1)                    ::  don't actually need to sub
-               ?+  r  (lag %sm a)
+             =+  ^=  w  %+  dif:si  e.a  %-  sun:si
+             ?:  (^gth prc ma)  (^^sub prc ma)  0
+             =+  ^=  x  %+  sum:si  e.b  (sun:si mb)
+             ?:  =((cmp:si w x) --1)
+             ?+  r  (lag %sm a)
                  %n  (lag %nt a)  %a  (lag %nt a)  %u  (lag %ce a)
                ==
              =+  j=(lsh 0 (abs:si q) a.a)
@@ -174,15 +174,15 @@
     ::  %e: a =  a.a    *2^e.a ||  %d:  a.a    *2^e.a < a < (a.a+.5)*2^e.a
     ::  %h: a = (a.a+.5)*2^e.a ||  %u: (a.a+.5)*2^e.a < a < (a.a+ 1)*2^e.a
     ++  lug  |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
-             ?~  a.a
-               ?-  t
-                 %fl  [%f & zer]  %lg  [%f & spd]
-                 %sm  ?:(=(f %e) !! [%f & zer])
-                 %ce  ?:(=(f %e) [%f & zer] [%f & spd])
-                 %ne  ?:(=(f %u) [%f & spd] [%f & zer])
-                 %nt  ?:(=(f %u) [%f & spd] [%f & zer])
-                 %na  ?:(|(=(f %e) =(f %d)) [%f & zer] [%f & spd])
-               ==
+             ::?~  a.a
+             ::  ?-  t
+             ::    %fl  [%f & zer]  %lg  [%f & spd]
+             ::    %sm  ?:(=(f %e) !! [%f & zer])
+             ::    %ce  ?:(=(f %e) [%f & zer] [%f & spd])
+             ::    %ne  ?:(=(f %u) [%f & spd] [%f & zer])
+             ::    %nt  ?:(=(f %u) [%f & spd] [%f & zer])
+             ::    %na  ?:(|(=(f %e) =(f %d)) [%f & zer] [%f & spd])
+             ::  ==
              =+  m=(met 0 a.a)
              ::
              =+  ^=  q
@@ -350,13 +350,5 @@
   ++  gth  |=  [a=fn b=fn]  ^-  (unit ,?)  (lth b a)
   ::
   ++  gte  |=  [a=fn b=fn]  ^-  (unit ,?)  (lte b a)
-  ::
-  ::  =((uni a) (uni b)) if and only if (equ a b), with the
-  ::  exception of positive/negative 0, which are distinct in
-  ::  ++uni but considered equal in comparisons
-  ++  uni  |=  [a=fn]  ^-  fn
-           ?.  ?=([%f *] a)  a
-           ?:  =(a.a 0)  [%f s.a --0 0]
-           [%f s.a (uni:m +>.a)]
   --
 --
