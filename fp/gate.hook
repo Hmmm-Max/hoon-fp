@@ -7,8 +7,11 @@
 !:  =<
 =+  fn==>(fl .(p 24, v -149, w 253, r %n))
 ::
-|=  [* [[a=[@s @u] ~] ~]]
-:-  %noun  (sqt:m:fn a)
+|=  [* [[a=[?(%fl %ce %ne %na %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
+:-  %noun  (lug:m:fn a)
+::
+::|=  [* [[a=[@s @u] ~] ~]]
+:::-  %noun  (sqt:m:fn a)
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
@@ -36,11 +39,14 @@
   ++  m                                                 ::  internal functions, constants
     |%
     ::  do not put 0s into these
-    ++  rou  |=  [a=[e=@s a=@u]]  ^-  fn 
+    ++  rou  |=  [a=[e=@s a=@u]]  ^-  fn
+             (rau a %e)
+    ::
+    ++  rau  |=  [a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn 
              ?-  r
-               %n  (lag %ne a)  %a  (lag %na a)
-               %u  (lag %ce a)  %d  (lag %fl a)
-               %z  (lag %fl a)
+               %n  (lug %ne a f)  %a  (lug %na a f)
+               %u  (lug %ce a f)  %d  (lug %fl a f)
+               %z  (lug %fl a f)
              ==
     ::
     ++  add  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
@@ -146,22 +152,11 @@
                  (^^add - 1)                            ::  enforce even exponent
                a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
              ::
-             ::  what we want the final precision to be
-             =+  w=(min prc +((abs:si (dif:si (frd v) emn))))
-             ::
-             =+  x=(^^sub (^^div (met 0 a.a) 2) w)
+             =+  x=(^^sub (^^div (met 0 a.a) 2) prc)
              =+  [y=(isr a.a x) z=(frd e.a)]
              ~&  "a: {<a>}"
-             ~&  "w: {<w>} || x: {<x>} || y: {<y>} || z: {<z>}"
-             %-  rou  :-  z
-             ?+  r  -.y
-               %n  ?+  +.a  -.y
-                     %h  ?~((dis -.y 1) -.y +(-.y))
-                     %u  +(-.y)
-                   ==
-               %a  ?+  +.a  -.y  %h  +(-.y)  %u  +(-.y)  ==
-               %u  ?:  =(-.y %e)  -.y  +(-.y)
-             ==
+             ~&  "x: {<x>} || y: {<y>} || z: {<z>}"
+             !!
     ::
     ++  equ  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
              ?.  =((log a) (log b))  |
@@ -200,6 +195,17 @@
     ::
     ::  in order: floor, ceiling, nearest (even, away), larger, smaller
     ++  lag  |=  [t=?(%fl %ce %ne %na %lg %sm) a=[e=@s a=@u]]  ^-  fn
+             (lug t a %e)
+    ::
+    ++  lug  |=  [t=?(%fl %ce %ne %na %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
+             ?~  a.a
+               ?-  t
+                 %fl  [%f & zer]  %sm  [%f & zer]       ::  warning: [%sm zer %e] gives zero!!
+                 %ce  ?:(=(f %e) [%f & zer] [%f & spd])
+                 %lg  [%f & spd]
+                 %ne  ?:(=(f %u) [%f & spd] [%f & zer])
+                 %na  ?:(|(=(f %e) =(f %d)) [%f & zer] [%f & spd])
+               ==
              =+  m=(met 0 a.a)
              ::
              =+  ^=  q
@@ -214,7 +220,9 @@
              ?~  a.a  ?-  t
                  %fl  [%f & zer]  %sm  [%f & zer]
                  %ce  [%f & spd]  %lg  [%f & spd]
-                 %ne  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+                 %ne  ?:  =(f %e)
+                        [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+                      [%f & ?:((^^lth b (bex (dec q))) zer spd)]
                  %na  [%f & ?:((^^lth b (bex (dec q))) zer spd)]
                ==
              ::
@@ -222,14 +230,23 @@
              ::
              =.  a  %-  uni
                ?-  t
-                 %fl  a            %sm  ?~(b a(a (dec a.a)) a)
-                 %lg  a(a +(a.a))  %ce  ?~(b a a(a +(a.a)))
-                 %ne  ?~  b  a
+                 %fl  a  %lg  a(a +(a.a))
+                 %sm  ?:  &(=(b 0) =(f %e))  a(a (dec a.a))  a
+                 %ce  ?:  &(=(b 0) =(f %e))  a  a(a +(a.a))
+                 %ne  ?~  b  ?.  =(q 0)  a
+                        ?-  f
+                          %e  a  %d  a  %u  a(a +(a.a))
+                          %h  ?~  (dis a.a 1)  a  a(a +(a.a))
+                        ==
                       =+  y=(bex (dec q))
-                      ?:  =(b y)                        ::  halfway rounds to even
+                      ?:  &(=(b y) =(f %e))             ::  halfway rounds to even
                         ?~  (dis a.a 1)  a  a(a +(a.a))
                       ?:  (^^lth b y)  a  a(a +(a.a))
-                 %na  ?~  b  a
+                 %na  ?~  b  ?.  =(q 0)  a
+                        ?-  f
+                          %e  a  %u  a(a +(a.a))
+                          %d  a  %h  a(a +(a.a))
+                        ==
                       ?:  (^^lth b (bex (dec q)))  a  a(a +(a.a))
                ==
              ?~  a.a  [%f & zer]
