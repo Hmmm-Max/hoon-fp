@@ -10,14 +10,22 @@
 ::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
 :::-  %noun  (lug:m:fn a)
 ::
-|=  [* [[a=[@s @u] ~] ~]]
-:-  %noun  (sqt:m:fn a)
+::|=  [* [[a=[@s @u] ~] ~]]
+:::-  %noun  (sqt:m:fn a)
 ::
-::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-::=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
-:::-  %noun  "n: {<(add:fn [%f a] [%f b])>} || u: {<(add:fu [%f a] [%f b])>} || d: {<(add:fd [%f a] [%f b])>} || z: {<(add:fz [%f a] [%f b])>} || a: {<(add:fa [%f a] [%f b])>}"
+|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
+=+  [fu=fn(r %u) fd=fn(r %d) fz=fn(r %z) fa=fn(r %a)]
+:-  %noun  "n: {<(add:fn [%f a] [%f b])>} || u: {<(add:fu [%f a] [%f b])>} || d: {<(add:fd [%f a] [%f b])>} || z: {<(add:fz [%f a] [%f b])>} || a: {<(add:fa [%f a] [%f b])>}"
 ::
 |%
+++  ryld
+  |=  [a=@rd]  ^-  fn
+  !!
+::
+++  rlyd
+  |=  [a=fn r=?(%n %u %d %z %a)]  ^-  @rd
+  !!
+::
 ++  fn  ::  float, infinity, or NaN
         ::  s=sign, e=exponent, a=arithmetic form
         ::  (-1)^s * a * 2^e
@@ -28,13 +36,15 @@
         ==
 ::
 ++  fl
-  |_  [p=@u v=@s w=@u r=?(%n %u %d %z %a)]
+  |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a)]
   ::  p=precision: number of bits in arithmetic form (NOT HIDDEN BIT!!)
   ::  v=minimum value of e
   ::  w=width: max - min value of e
   ::  r=rounding mode: round to nearest (ties to even), round up, round down,
   ::                   round to zero, round to nearest (ties away from zero)
   ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
+  ::  binary16: [11 -24 29 r] binary64: [53 -1074 2045 r]
+  ::  binary128: [113 -16494 32765 r]
   ::
   ++  m                                                 ::  internal functions, constants
     |%
@@ -56,7 +66,12 @@
              =+  ^=  w  %+  dif:si  e.a  %-  sun:si     ::  expanded exponent of a
                ?:  (^gth prc ma)  (^^sub prc ma)  0
              =+  ^=  x  %+  sum:si  e.b  %-  sun:si  mb ::  highest exponent that b reaches
-             ?:  =((cmp:si w x) --1)  (rau a %d)        ::  don't actually need to add
+             ?:  =((cmp:si w x) --1)                    ::  don't actually need to add
+               ?-  r
+                 %n  (lag %na a)  %a  (lag %na a)
+                 %u  (lag %lg a)  %d  (lag %fl a)
+                 %z  (lag %fl a)
+               ==
              (rou [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)])
     ::
     ++  sub  |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
@@ -84,7 +99,7 @@
              =+  v=(dif:si (sun:si ma) (sun:si +((^^add mb prc))))
              =.  a  ?:  (syn:si v)  a
              a(e (sum:si v e.a), a (lsh 0 (abs:si v) a.a))
-             =+  [q=(^^div a.a a.b) j=(dif:si e.a e.b)]
+             =+  [j=(dif:si e.a e.b) q=(^^div a.a a.b)]
              ?+  r  (rou [j q])
                %u  ?~  (mod a.a a.b)  (lag %ce [j q])  (lag %lg [j q])
                %n  ?~  (mod a.a a.b)  (lag %ne [j q])  (lag %na [j q])
@@ -167,24 +182,21 @@
              =+  (min (abs:si (dif:si e.a emn)) (^^sub prc (met 0 a.a)))
              a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
+    ++  rpr  |=  [a=@s]
+             ?.  =((cmp:si a emn) -1)  prc
+             =+  b=(abs:si (dif:si emn a))
+             ?:  (^^lth b prc)  (^^sub prc b)  1
+    ::
     ::  in order: floor, ceiling, nearest (even, away from 0, toward 0), larger, smaller
     ++  lag  |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u]]  ^-  fn
              (lug t a %e)
     ::
+    ::  using %e, %d, %h, %u allows us to round numbers without knowing all digits
     ::  %e: a =  a.a    *2^e.a ||  %d:  a.a    *2^e.a < a < (a.a+.5)*2^e.a
     ::  %h: a = (a.a+.5)*2^e.a ||  %u: (a.a+.5)*2^e.a < a < (a.a+ 1)*2^e.a
     ++  lug  |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
-             ::?~  a.a
-             ::  ?-  t
-             ::    %fl  [%f & zer]  %lg  [%f & spd]
-             ::    %sm  ?:(=(f %e) !! [%f & zer])
-             ::    %ce  ?:(=(f %e) [%f & zer] [%f & spd])
-             ::    %ne  ?:(=(f %u) [%f & spd] [%f & zer])
-             ::    %nt  ?:(=(f %u) [%f & spd] [%f & zer])
-             ::    %na  ?:(|(=(f %e) =(f %d)) [%f & zer] [%f & spd])
-             ::  ==
              =+  m=(met 0 a.a)
-             ::
+             ?>  |(=(f %e) (^gte m (rpr e.a)))          ::  if not %e, need sufficient precision
              =+  ^=  q
                =+  ^=  f                                ::  reduce precision
                  ?:  (^gth m prc)  (^^sub m prc)  0
@@ -242,7 +254,7 @@
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  p
     ++  emn  v
-    ++  emm  (sum:si emn (sun:si (dec p)))
+    ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
     ++  spd  [emn 1]                                    ::  smallest "denormal"
     ++  spn  [emm 1]                                    ::  smallest "normal"
