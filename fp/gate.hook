@@ -7,8 +7,8 @@
 !:  =<
 =+  fs==>(fl .(p 24, v -149, w 253, r %n))
 ::
-|=  [* [[a=@ ~] ~]]
-:-  %noun  (mul:nrs a a)
+|=  [* [[a=@ b=@ ~] ~]]
+:-  %noun  (div:nrd a b)
 ::
 ::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
 :::-  %noun  (lug:m:fs a)
@@ -52,7 +52,7 @@
     =+  s==(0 (cut 0 [(^add p w) 1] a))
     ?:  =(e 0)
       ?:  =(f 0)  [%f s --0 0]  [%f s (dif:si --1 b) f]
-    ?:  =(e (fil 0 p 1))
+    ?:  =(e (fil 0 w 1))
       ?:  =(f 0)  [%i s]  [%n ~]
     =+  q=(dif:si (sun:si e) (sum:si b (sun:si p)))
     =+  r=(^add f (bex p))
