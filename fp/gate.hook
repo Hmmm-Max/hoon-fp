@@ -24,10 +24,9 @@
 ++  fn  ::  float, infinity, or NaN
         ::  s=sign, e=exponent, a=arithmetic form
         ::  (-1)^s * a * 2^e
-        ::  c=& : signalling NaN, c=| : quiet NaN
         $%  [%f s=? e=@s a=@u]
             [%i s=?]
-            [%n c=?]
+            [%n ~]
         ==
 ::
 ++  nrh  =>  ff  .(w 5, p 10, b --15, r %n)
@@ -54,8 +53,7 @@
     ?:  =(e 0)
       ?:  =(f 0)  [%f s --0 0]  [%f s (dif:si --1 b) f]
     ?:  =(e (fil 0 p 1))
-      ?:  =(f 0)  [%i s]
-      [%n =(1 (cut 0 [(dec p) 1] f))]
+      ?:  =(f 0)  [%i s]  [%n ~]
     =+  q=(dif:si (sun:si e) (sum:si b (sun:si p)))
     =+  r=(^add f (bex p))
     [%f s q r]
@@ -69,9 +67,7 @@
     ?:  ?=([%i *] a)
       =+  q=(lsh 0 p (fil 0 w 1))
       ?:  s.a  q  (^add q sb)
-    ?:  ?=([%n *] a)
-      ?:  c.a  (add (lsh 0 p (fil 0 w 1)) 1)
-      (lsh 0 (dec p) (fil 0 +(w) 1))
+    ?:  ?=([%n *] a)  (lsh 0 (dec p) (fil 0 +(w) 1))
     ?~  a.a  ?:  s.a  0  sb
     =+  ma=(met 0 a.a)
     ?.  =(ma +(p))
@@ -117,10 +113,10 @@
            ?-(-.a %f a(s !s.a), %i a(s !s.a), %n a)
   ::
   ++  add  |=  [a=fn b=fn]  ^-  fn
-           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n |]
+           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
            ?:  |(?=([%i *] a) ?=([%i *] b))
              ?:  &(?=([%i *] a) ?=([%i *] b))
-               ?:  =(a b)  a  [%n |]
+               ?:  =(a b)  a  [%n ~]
              ?:  ?=([%i *] a)  a  b
            ?:  |(=(a.a 0) =(a.b 0))
              ?.  &(=(a.a 0) =(a.b 0))  %-  rou  ?~(a.a b a)
@@ -134,43 +130,43 @@
   ++  sub  |=  [a=fn b=fn]  ^-  fn  (add a (fli b))
   ::
   ++  mul  |=  [a=fn b=fn]  ^-  fn
-           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n |]
+           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
            ?:  ?=([%i *] a)
              ?:  ?=([%i *] b)  [%i =(s.a s.b)]
-             ?:  =(a.b 0)  [%n |]  [%i =(s.a s.b)]
+             ?:  =(a.b 0)  [%n ~]  [%i =(s.a s.b)]
            ?:  ?=([%i *] b)
-             ?:  =(a.a 0)  [%n |]  [%i =(s.a s.b)]
+             ?:  =(a.a 0)  [%n ~]  [%i =(s.a s.b)]
            ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
            ?:  =(s.a s.b)  (mul:m +>.a +>.b)
            =.(r swr:m (fli (mul:m +>.a +>.b)))
   ::
   ++  div  |=  [a=fn b=fn]  ^-  fn
-           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n |]
+           ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
            ?:  ?=([%i *] a)
-             ?:  ?=([%i *] b)  [%n |]  [%i =(s.a s.b)]
+             ?:  ?=([%i *] b)  [%n ~]  [%i =(s.a s.b)]
            ?:  ?=([%i *] b)  [%f =(s.a s.b) --0 0]
-           ?:  =(a.a 0)  ?:  =(a.b 0)  [%n |]  [%f =(s.a s.b) --0 0]
+           ?:  =(a.a 0)  ?:  =(a.b 0)  [%n ~]  [%f =(s.a s.b) --0 0]
            ?:  =(a.b 0)  [%i =(s.a s.b)]
            ?:  =(s.a s.b)  (div:m +>.a +>.b)
            =.(r swr:m (fli (div:m +>.a +>.b)))
   ::
   ++  fma  |=  [a=fn b=fn c=fn]  ^-  fn                 ::  a * b + c
-           ?:  |(?=([%n *] a) ?=([%n *] b) ?=([%n *] c))  [%n |]
+           ?:  |(?=([%n *] a) ?=([%n *] b) ?=([%n *] c))  [%n ~]
            =+  ^=  x
              ?:  ?=([%i *] a)
              ?:  ?=([%i *] b)  [%i =(s.a s.b)]
-               ?:  =(a.b 0)  [%n |]  [%i =(s.a s.b)]
+               ?:  =(a.b 0)  [%n ~]  [%i =(s.a s.b)]
              ?:  ?=([%i *] b)
-               ?:  =(a.a 0)  [%n |]  [%i =(s.a s.b)]
+               ?:  =(a.a 0)  [%n ~]  [%i =(s.a s.b)]
              ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
              [%f =(s.a s.b) (sum:si e.a e.b) (^mul a.a a.b)]
            (add x c)
   ::
   ++  sqt  |=  [a=fn]  ^-  fn
-           ?:  ?=([%n *] a)  [%n |]
-           ?:  ?=([%i *] a)  ?:(s.a a [%n |])
+           ?:  ?=([%n *] a)  [%n ~]
+           ?:  ?=([%i *] a)  ?:(s.a a [%n ~])
            ?~  a.a  [%f s.a --0 0]
-           ?.  s.a  [%n |]
+           ?.  s.a  [%n ~]
            (sqt:m +>.a)
   ::
   ++  lth  |=  [a=fn b=fn]  ^-  (unit ,?)
