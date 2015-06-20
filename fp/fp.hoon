@@ -86,7 +86,7 @@
   ::
   ++  div
     |=  [a=fn b=fn]  ^-  fn
-    ?:  =(prc 0)  [%n ~]
+    ?:  =(prc:m 0)  [%n ~]
     ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
     ?:  ?=([%i *] a)
       ?:  ?=([%i *] b)  [%n ~]  [%i =(s.a s.b)]
@@ -111,7 +111,7 @@
   ::
   ++  sqt
     |=  [a=fn]  ^-  fn
-    ?:  =(prc 0)  [%n ~]
+    ?:  =(prc:m 0)  [%n ~]
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  ?:(s.a a [%n ~])
     ?~  a.a  [%f s.a --0 0]
@@ -449,18 +449,18 @@
     =+  r=(^add (lsh 0 p (abs:si q)) (end 0 p a.a))
     ?:  s.a  r  (^add r sb)
   ::
-  ++  add  |=  [a=@ b=@]  (bif (add:pa (from a) (from b)))
-  ++  sub  |=  [a=@ b=@]  (bif (sub:pa (from a) (from b)))
-  ++  mul  |=  [a=@ b=@]  (bif (mul:pa (from a) (from b)))
-  ++  div  |=  [a=@ b=@]  (bif (div:pa (from a) (from b)))
-  ++  fma  |=  [a=@ b=@ c=@]  (bif (fma:pa (from a) (from b) (from c)))
-  ++  sqt  |=  [a=@]  (bif (sqt:pa (from a)))
+  ++  add  |=  [a=@ b=@]  (bif (add:pa (sea a) (sea b)))
+  ++  sub  |=  [a=@ b=@]  (bif (sub:pa (sea a) (sea b)))
+  ++  mul  |=  [a=@ b=@]  (bif (mul:pa (sea a) (sea b)))
+  ++  div  |=  [a=@ b=@]  (bif (div:pa (sea a) (sea b)))
+  ++  fma  |=  [a=@ b=@ c=@]  (bif (fma:pa (sea a) (sea b) (sea c)))
+  ++  sqt  |=  [a=@]  (bif (sqt:pa (sea a)))
   ++  sun  |=  [a=@u]  (bit [%f & --0 a])
-  ++  lth  |=  [a=@ b=@]  (lth:pa (from a) (from b))
-  ++  lte  |=  [a=@ b=@]  (lte:pa (from a) (from b))
-  ++  equ  |=  [a=@ b=@]  (equ:pa (from a) (from b))
-  ++  gte  |=  [a=@ b=@]  (gte:pa (from a) (from b))
-  ++  gth  |=  [a=@ b=@]  (gth:pa (from a) (from b))
+  ++  lth  |=  [a=@ b=@]  (lth:pa (sea a) (sea b))
+  ++  lte  |=  [a=@ b=@]  (lte:pa (sea a) (sea b))
+  ++  equ  |=  [a=@ b=@]  (equ:pa (sea a) (sea b))
+  ++  gte  |=  [a=@ b=@]  (gte:pa (sea a) (sea b))
+  ++  gth  |=  [a=@ b=@]  (gth:pa (sea a) (sea b))
   --
 ::
 ++  rh  =>  ff  .(w 5, p 10, b --15, r %n)
