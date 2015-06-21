@@ -229,8 +229,8 @@
       ?:  d  (sub [(sum:si e.a e.b) (^^mul a.a a.b)] c)
       (sub c [(sum:si e.a e.b) (^^mul a.a a.b)])
     ::
-    ::  sqrt((rsh 1 b a))
-    ++  isr
+    ::  integer square root w/rounding info: sqrt((rsh 1 b a))
+    ++  itr
       |=  [a=@ b=@]  ^-  [@ ?(%e %d %h %u)]
       =.  a  (lsh 1 1 a)  =.  b  +(b)
       =+  [q=(^^div (dec (xeb a)) 2) r=0]
@@ -255,7 +255,7 @@
     ::
     ++  sqt
       |=  [a=[e=@s a=@u]]  ^-  fn
-      =+  v=(log a)
+      =+  v=(ibl a)
       ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
         [%f & ?:(=(r %u) spd zer)]
       =.  a
@@ -265,13 +265,13 @@
           (^^add - 1)                                   ::  enforce even exponent
         a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
       =+  x=(^^sub +((^^div (met 0 a.a) 2)) prc)
-      =+  [y=(isr a.a x) z=(sum:si (sun:si x) (frd e.a))]
+      =+  [y=(itr a.a x) z=(sum:si (sun:si x) (frd e.a))]
       (rau [z -.y] +.y)
     ::
     ++  lth
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
       ?:  =(e.a e.b)  (^^lth a.a a.b)
-      =+  c=(cmp:si (log a) (log b))
+      =+  c=(cmp:si (ibl a) (ibl b))
       ?:  =(c -1)  &  ?:  =(c --1)  |
       ?:  =((cmp:si e.a e.b) -1)
         (^^lth (rsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
@@ -280,7 +280,7 @@
     ++  lte
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
       ?:  =(e.a e.b)  (^^lte a.a a.b)
-      =+  c=(cmp:si (log a) (log b))
+      =+  c=(cmp:si (ibl a) (ibl b))
       ?:  =(c -1)  &  ?:  =(c --1)  |
       ?:  =((cmp:si e.a e.b) -1)
         (^^lte a.a (lsh 0 (abs:si (dif:si e.a e.b)) a.b))
@@ -288,12 +288,13 @@
     ::
     ++  equ
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
-      ?.  =((log a) (log b))  |
+      ?.  =((ibl a) (ibl b))  |
       ?:  =((cmp:si e.a e.b) -1)
         =((lsh 0 (abs:si (dif:si e.a e.b)) a.b) a.a)
       =((lsh 0 (abs:si (dif:si e.a e.b)) a.a) a.b)
     ::
-    ++  log
+    ::  integer binary logarithm: 2^ibl(a) <= |a| < 2^(ibl(a)+1)
+    ++  ibl
       |=  [a=[e=@s a=@u]]  ^-  @s
       (sum:si (sun:si (dec (met 0 a.a))) e.a)
     ::
@@ -343,7 +344,7 @@
           ?:  =((cmp:si e.a emn) -1)  (dif:si emn e.a)  --0
         (max f g)
       =^  b  a  :-  (end 0 q a.a)
-      a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
+        a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
       ::
       ?~  a.a
         ?-  t
@@ -412,7 +413,7 @@
     q(p +(p), v i, w (^sub (bex w) 3), r r)
   ::
   ++  sea
-    |=  [a=@]  ^-  fn
+    |=  [a=@r]  ^-  fn
     =+  f=(cut 0 [0 p] a)
     =+  e=(cut 0 [p w] a)
     =+  s==(0 (cut 0 [(^add p w) 1] a))
@@ -424,38 +425,36 @@
     =+  r=(^add f (bex p))
     [%f s q r]
   ::
-  ++  bit
-    |=  [a=fn]  ^-  @
-    (bif (rou:pa a))
+  ++  bit  |=  [a=fn]  (bif (rou:pa a))
   ::
   ++  bif
-    |=  [a=fn]  ^-  @
+    |=  [a=fn]  ^-  @r
     ?:  ?=([%i *] a)
       =+  q=(lsh 0 p (fil 0 w 1))
       ?:  s.a  q  (^add q sb)
     ?:  ?=([%n *] a)  (lsh 0 (dec p) (fil 0 +(w) 1))
-    ?~  a.a  ?:  s.a  0  sb
+    ?~  a.a  ?:  s.a  `@r`0  sb
     =+  ma=(met 0 a.a)
     ?.  =(ma +(p))
       ?>  =(e.a (dif:si --1 b))
       ?>  (^lth ma +(p))
-      ?:  s.a  a.a  (^add a.a sb)
+      ?:  s.a  `@r`a.a  (^add a.a sb)
     =+  q=(sum:si (sum:si e.a (sun:si p)) b)
     =+  r=(^add (lsh 0 p (abs:si q)) (end 0 p a.a))
     ?:  s.a  r  (^add r sb)
   ::
-  ++  add  |=  [a=@ b=@]  (bif (add:pa (sea a) (sea b)))
-  ++  sub  |=  [a=@ b=@]  (bif (sub:pa (sea a) (sea b)))
-  ++  mul  |=  [a=@ b=@]  (bif (mul:pa (sea a) (sea b)))
-  ++  div  |=  [a=@ b=@]  (bif (div:pa (sea a) (sea b)))
-  ++  fma  |=  [a=@ b=@ c=@]  (bif (fma:pa (sea a) (sea b) (sea c)))
-  ++  sqt  |=  [a=@]  (bif (sqt:pa (sea a)))
+  ++  add  |=  [a=@r b=@r]  (bif (add:pa (sea a) (sea b)))
+  ++  sub  |=  [a=@r b=@r]  (bif (sub:pa (sea a) (sea b)))
+  ++  mul  |=  [a=@r b=@r]  (bif (mul:pa (sea a) (sea b)))
+  ++  div  |=  [a=@r b=@r]  (bif (div:pa (sea a) (sea b)))
+  ++  fma  |=  [a=@r b=@r c=@r]  (bif (fma:pa (sea a) (sea b) (sea c)))
+  ++  sqt  |=  [a=@r]  (bif (sqt:pa (sea a)))
   ++  sun  |=  [a=@u]  (bit [%f & --0 a])
-  ++  lth  |=  [a=@ b=@]  (lth:pa (sea a) (sea b))
-  ++  lte  |=  [a=@ b=@]  (lte:pa (sea a) (sea b))
-  ++  equ  |=  [a=@ b=@]  (equ:pa (sea a) (sea b))
-  ++  gte  |=  [a=@ b=@]  (gte:pa (sea a) (sea b))
-  ++  gth  |=  [a=@ b=@]  (gth:pa (sea a) (sea b))
+  ++  lth  |=  [a=@r b=@r]  (lth:pa (sea a) (sea b))
+  ++  lte  |=  [a=@r b=@r]  (lte:pa (sea a) (sea b))
+  ++  equ  |=  [a=@r b=@r]  (equ:pa (sea a) (sea b))
+  ++  gte  |=  [a=@r b=@r]  (gte:pa (sea a) (sea b))
+  ++  gth  |=  [a=@r b=@r]  (gth:pa (sea a) (sea b))
   --
 ::
 ++  rh  =>  ff  .(w 5, p 10, b --15, r %n)
