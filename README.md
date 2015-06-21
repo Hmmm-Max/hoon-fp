@@ -14,8 +14,9 @@
 * Elementary functions (trigonometric, logarithm, exponent...)
 * Jets for multiple-precision (using MPFR which is under LGPL license)
 * Jets for ++rd, ++rs, possibly ++rq
+* Fractal demo
 
-## Not planned ATM:
+## Not planned ATM
 
-* Signalling NaN
+* Flags, signalling NaN
 * Decimal floating point

@@ -32,12 +32,11 @@
 ++  fl
   |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a)]
   ::  p=precision: number of bits in arithmetic form, including "hidden bit"
-  ::               p=0 is infinite precision and unbounded exponents
-  ::               dividing, square root will result in NaN
+  ::               must be at least 2
   ::  v=minimum value of e
   ::  w=width: max - min value of e, w=0 is fixed point
   ::  r=rounding mode: round to nearest (ties to even), round up, round down,
-  ::                   round to zero, round to nearest (ties away from zero)
+  ::                   round to zero, round away from zero
   ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
   ::  binary16: [11 -24 29 r] binary64: [53 -1074 2045 r]
   ::  binary128: [113 -16494 32765 r]
@@ -86,7 +85,6 @@
   ::
   ++  div
     |=  [a=fn b=fn]  ^-  fn
-    ?:  =(prc:m 0)  [%n ~]
     ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
     ?:  ?=([%i *] a)
       ?:  ?=([%i *] b)  [%n ~]  [%i =(s.a s.b)]
@@ -111,7 +109,6 @@
   ::
   ++  sqt
     |=  [a=fn]  ^-  fn
-    ?:  =(prc:m 0)  [%n ~]
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  ?:(s.a a [%n ~])
     ?~  a.a  [%f s.a --0 0]
@@ -164,11 +161,10 @@
     ::
     ++  rau
       |=  [a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
-      ?:  =(0 prc)  [%f & (uni a)]
       ?-  r
-        %n  (lug %ne a f)  %a  (lug %na a f)
-        %u  (lug %ce a f)  %d  (lug %fl a f)
-        %z  (lug %fl a f)
+        %z  (lug %fl a f)  %d  (lug %fl a f)
+        %a  (lug %ce a f)  %u  (lug %ce a f)
+        %n  (lug %ne a f)
       ==
     ::
     ++  add
@@ -179,11 +175,11 @@
       =+  ^=  w  %+  dif:si  e.a  %-  sun:si            ::  expanded exponent of a
         ?:  (^gth prc ma)  (^^sub prc ma)  0
       =+  ^=  x  %+  sum:si  e.b  (sun:si mb)           ::  highest exponent that b reaches
-      ?:  &(=((cmp:si w x) --1) !=(0 prc))              ::  don't actually need to add
+      ?:  &(=((cmp:si w x) --1))                        ::  don't actually need to add
         ?-  r
-          %n  (lag %na a)  %a  (lag %na a)
-          %u  (lag %lg a)  %d  (lag %fl a)
-          %z  (lag %fl a)
+          %z  (lag %fl a)  %d  (lag %fl a)
+          %a  (lag %lg a)  %u  (lag %lg a)
+          %n  (lag %na a)
         ==
       (rou [e.b (^^add (lsh 0 (abs:si q) a.a) a.b)])
     ::
@@ -196,11 +192,11 @@
       =+  ^=  w  %+  dif:si  e.a  %-  sun:si
         ?:  (^gth prc ma)  (^^sub prc ma)  0
       =+  ^=  x  %+  sum:si  e.b  (sun:si mb)
-      ?:  &(=((cmp:si w x) --1) !=(0 prc))
+      ?:  &(=((cmp:si w x) --1))
         ?-  r
-          %n  (lag %nt a)  %a  (lag %nt a)
-          %u  (lag %ce a)  %d  (lag %sm a)
-          %z  (lag %sm a)
+          %z  (lag %sm a)  %d  (lag %sm a)
+          %a  (lag %ce a)  %u  (lag %ce a)
+          %n  (lag %nt a)
         ==
       =+  j=(lsh 0 (abs:si q) a.a)
       |-  ?.  (^gte j a.b)  (fli $(a.b j, j a.b, r swr))
@@ -213,7 +209,6 @@
     ::
     ++  div
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
-      ?<  =(prc 0)
       =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
       =+  v=(dif:si (sun:si ma) (sun:si +((^^add mb prc))))
       =.  a  ?:  (syn:si v)  a
@@ -221,6 +216,7 @@
       =+  [j=(dif:si e.a e.b) q=(^^div a.a a.b)]
       ?+  r  (rou [j q])
         %u  ?~  (mod a.a a.b)  (lag %ce [j q])  (lag %lg [j q])
+        %a  ?~  (mod a.a a.b)  (lag %ce [j q])  (lag %lg [j q])
         %n  ?~  (mod a.a a.b)  (lag %ne [j q])  (lag %na [j q])
       ==
     ::
@@ -259,7 +255,6 @@
     ::
     ++  sqt
       |=  [a=[e=@s a=@u]]  ^-  fn
-      ?<  =(prc 0)
       =+  v=(log a)
       ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
         [%f & ?:(=(r %u) spd zer)]
@@ -394,7 +389,7 @@
       ?:  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
     ::
     ++  swr  ?+(r r %d %u, %u %d)
-    ++  prc  p
+    ++  prc  ?>((^gth p 1) p)
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
