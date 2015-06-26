@@ -1,34 +1,12 @@
 ::
-::::  /hook/gate/fp/cat
-  ::
-/?  314
+::::  /hoon/fp/lib
+  ::  
+/?    314
+/-    *fp
+!:
 ::
 ::::
-!:  =<
-=+  fs==>(fl .(p 24, v -149, w 253, r %n))
-::
-|=  [* [[a=@ b=@ ~] ~]]
-:-  %noun  (div:rd (sun:rd a) (sun:rd b))
-::
-::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
-:::-  %noun  (lug:m:fs a)
-::
-::|=  [* [[a=[@s @u] ~] ~]]
-:::-  %noun  (sqt:m:fs a)
-::
-::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-::=+  [fu=fs(r %u) fd=fs(r %d) fz=fs(r %z) fa=fs(r %a)]
-:::-  %noun  "n: {<(add:fs [%f a] [%f b])>} || u: {<(add:fu [%f a] [%f b])>} || d: {<(add:fd [%f a] [%f b])>} || z: {<(add:fz [%f a] [%f b])>} || a: {<(add:fa [%f a] [%f b])>}"
-::
 |%
-++  fn  ::  float, infinity, or NaN
-        ::  s=sign, e=exponent, a=arithmetic form
-        ::  (-1)^s * a * 2^e
-        $%  [%f s=? e=@s a=@u]
-            [%i s=?]
-            [%n ~]
-        ==
-::
 ++  fl
   |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a)]
   ::  p=precision: number of bits in arithmetic form, including "hidden bit"
@@ -123,8 +101,7 @@
       ?:  &(=(a.a 0) =(a.b 0))  |
       ?:  =(a.a 0)  s.b  !s.a
     ?:  !=(s.a s.b)  s.b
-    |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
-    (lth:m +>.a +>.b)
+    ?:  s.a  (lth:m +>.a +>.b)  (lth:m +>.b +>.a)
   ::
   ++  lte
     |=  [a=fn b=fn]  ^-  (unit ,?)
@@ -135,8 +112,7 @@
       ?:  &(=(a.a 0) =(a.b 0))  &
       ?:  =(a.a 0)  s.b  !s.a
     ?:  !=(s.a s.b)  s.b
-    |-  ?:  =(s.a |)  $(a [%f & e.b a.b], b [%f & e.a a.a])
-    (lte:m +>.a +>.b)
+    ?:  s.a  (lte:m +>.a +>.b)  (lte:m +>.b +>.a)
   ::
   ++  equ
     |=  [a=fn b=fn]  ^-  (unit ,?)
@@ -232,7 +208,7 @@
     ::  integer square root w/rounding info: sqrt((rsh 1 b a))
     ++  itr
       |=  [a=@ b=@]  ^-  [@ ?(%e %d %h %u)]
-      =.  a  (lsh 1 1 a)  =.  b  +(b)
+      =>  .(a (lsh 1 1 a), b +(b))
       =+  [q=(^^div (dec (xeb a)) 2) r=0]
       =+  ^=  c
         |-  =+  s=(^^add r (bex q))
