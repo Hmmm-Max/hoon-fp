@@ -426,7 +426,7 @@
       =+  c=$(b (^^div b 2))
       =+  d=(^^mul c c)
       ?:  =((end 0 1 b) 1)
-        (^^mul d b)
+        (^^mul d a)
       d
     ::
     ++  swr  ?+(r r %d %u, %u %d)
