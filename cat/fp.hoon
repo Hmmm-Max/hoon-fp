@@ -16,7 +16,7 @@
 :::-  %noun  (lug:m:fs a)
 ::
 |=  [* [[a=[@s @u] ~] ~]]
-:-  %noun  (tod:fs (sqt:m:fs a))
+:-  %noun  (drg:m:fs a)
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fs(r %u) fd=fs(r %d) fz=fs(r %z) fa=fs(r %a)]
