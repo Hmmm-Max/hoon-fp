@@ -130,6 +130,14 @@
   ++  gth
     |=  [a=fn b=fn]  ^-  (unit ,?)  (lth b a)
   ::
+  ++  tod
+    |=  [a=fn]  ^-  tape
+    ?:  ?=([%n *] a)  "nan"
+    ?:  ?=([%i *] a)  ?:(s.a "inf" "-inf")
+    =+  ^=  r
+      ?~  a.a  "0"  (tod:m +>.a)
+    ?:  s.a  r  (weld "-" r)
+  ::
   ++  m                                                 ::  internal functions, constants
     |%                                                  ::  don't put 0s into these
     ++  rou
@@ -240,7 +248,7 @@
         =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
           (^^add - 1)                                   ::  enforce even exponent
         a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
-      =+  x=(^^sub +((^^div (met 0 a.a) 2)) prc)
+      =+  x=(^^sub (^^div (met 0 a.a) 2) prc)
       =+  [y=(itr a.a x) z=(sum:si (sun:si x) (frd e.a))]
       (rau [z -.y] +.y)
     ::
@@ -364,6 +372,54 @@
       ::
       =+  x=(dif:si e.a emx)
       ?:  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
+    ::
+    ++  tod                                             ::  float to decimal
+      |=  [a=[e=@s a=@u]]  ^-  tape                     ::  assume input is rounded and
+      =+  gr=(grs a)                                    ::  at desired (preserving) precision
+      ?.  ?=(~ gr)  +.gr
+      (drg a)
+    ::
+    ++  grs                                             ::  grisu3
+      |=  [a=[e=@s a=@u]]  ^-  (unit tape)
+      ~
+    ::
+    ++  drg                                             ::  dragon4
+      |=  [a=[e=@s a=@u]]  ^-  tape
+      =+  r=(lsh 0 ?:((syn:si e.a) (abs:si e.a) 0) a.a)
+      =+  s=(lsh 0 ?.((syn:si e.a) (abs:si e.a) 0) 1)
+      =+  m=(lsh 0 ?:((syn:si e.a) (abs:si e.a) 0) 1)
+      =+  [k=--0 q=(^^div (^^add s 9) 10)]              ::  fixup
+      |-  ?:  (^^lth r q)
+        %=  $
+          k  (dif:si k --1)
+          r  (^^mul r 10)
+          m  (^^mul m 10)
+        ==
+      |-  ?:  (^gte (^^add (^^mul r 2) m) (^^mul s 2))
+        $(s (^^mul s 10), k (sum:si k --1))
+      =+  [e=(dif:si k --1) u=0 o=""]
+      |-  =>  %=  .
+          k  (dif:si k --1)
+          u  (^^div (^^mul r 10) s)
+          r  (mod (^^mul r 10) s)
+          m  (^^mul m 10)
+        ==
+      ?>  (^^lth u 10)
+      =+  l=(^^lth (^^mul r 2) m)
+      =+  ^=  h
+        ?|  (^^lth (^^mul s 2) m)
+            (^gth (^^mul r 2) (^^sub (^^mul s 2) m))
+        ==
+      ?:  &(!l !h)
+        %=  $
+          o  ?:  =((lent o) 1)
+               [(^^add u '0') '.' o]
+             [(^^add u '0') o]
+        ==
+      =+  q=?:(|(&(!l h) &(=(l h) (^gte (^^mul r 2) s))) '1' '0')
+      =.  o  ?:(=((lent o) 1) [(^^add u q) '.' o] [(^^add u q) o])
+      =.  o  ?:(=((lent o) 1) ['0' '.' o] o)
+      (weld (flop o) "e{?:((syn:si e) <(abs:si e)> <e>)}")
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)

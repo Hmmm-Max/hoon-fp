@@ -1,5 +1,5 @@
 ::
-::::  /hoon/gate/fp/cat
+::::  /hoon/fp/cat
   ::
 /?    314
 /-    *fp
@@ -9,14 +9,14 @@
 !:
 =+  fs==>(fl .(p 24, v -149, w 253, r %n))
 ::
-|=  [* [[a=@ b=@ ~] ~]]
-:-  %noun  (div:rd (sun:rd a) (sun:rd b))
+::|=  [* [[a=@ b=@ ~] ~]]
+:::-  %noun  (div:rd (sun:rd a) (sun:rd b))
 ::
 ::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
 :::-  %noun  (lug:m:fs a)
 ::
-::|=  [* [[a=[@s @u] ~] ~]]
-:::-  %noun  (sqt:m:fs a)
+|=  [* [[a=[@s @u] ~] ~]]
+:-  %noun  (tod:fs (sqt:m:fs a))
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fs(r %u) fd=fs(r %d) fz=fs(r %z) fa=fs(r %a)]
