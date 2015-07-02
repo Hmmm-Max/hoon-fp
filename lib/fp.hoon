@@ -420,7 +420,6 @@
                ?:  (^^lth b y)  a  a(a +(a.a))
         ==
       ?~  a.a  [%f & zer]
-      ?.  |(den =((met 0 a.a) prc))  [%f & zer] 
       ::
       =+  x=(dif:si e.a emx)
       ?:  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
