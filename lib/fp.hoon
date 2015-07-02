@@ -93,6 +93,12 @@
     ?~  a.a  [%f s.a zer:m]
     ?:  s.a  (sqt:m +>.a)  [%n ~]
   ::
+  ++  isr
+    |=  [a=fn]  ^-  fn
+    ?:  ?=([%n *] a)  [%n ~]
+    ?:  ?=([%i *] a)  [%n ~]
+    ?~  a.a  [%n ~]
+    ?:  s.a  (isr:m +>.a)  [%n ~]
   ++  lth
     |=  [a=fn b=fn]  ^-  (unit ,?)
     ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
@@ -225,7 +231,6 @@
     ::  integer square root w/rounding info
     ++  itr
       |=  [a=@]  ^-  [@ ?(%e %d %h %u)]
-      =.  a  (lsh 0 2 a)
       =+  [q=(^^div (dec (xeb a)) 2) r=0]
       =+  ^=  c
         |-  =+  s=(^^add r (bex q))
@@ -233,16 +238,28 @@
         ?:  =(q 0)
           ?:  (^^lte - a)  [s -]  [r (^^mul r r)]
         ?:  (^^lte - a)  $(r s, q (dec q))  $(q (dec q))
-      =+  z=(rsh 0 1 -.c)
-      ?:  =(+.c a)  [z %e]
-      =+  v=(^^add -.c 1)
+      ?:  =(+.c a)  [-.c %e]
+      =+  v=(^^add (lsh 0 1 -.c) 1)
       =+  y=(^^mul v v)
-      ?:  =(y a)  [z %h]  ?:((^^lth y a) [z %u] [z %d])
+      ?:  (^^lth y (lsh 0 2 a))  [-.c %u]  [-.c %d]
     ::
     ::  integer inverse square root w/shift amount & rounding info
     ++  iir
       |=  [a=@]  ^-  [@ @ ?(%e %d %h %u)]
-      !!
+      =+  [sa=(dec (xeb a))]
+      =+  [q=(^^div (xeb a) 2) z=(bex (^^mul sa 2)) r=0]
+      =+  ^=  c
+        |-  =+  s=(^^add r (bex q))
+        =+  (^^mul a (^^mul s s))
+        ?:  =(q 0)
+          ?:  (^^lte - z)  [s -]  [r (^^mul a (^^mul r r))]
+        ?:  (^^lte - z)  $(r s, q (dec q))  $(q (dec q))
+      ?:  =(+.c z)  [-.c sa %e]
+      =+  v=(^^add (lsh 0 1 -.c) 1)
+      =+  y=(^^mul a (^^mul v v))
+      =+  w=(lsh 0 2 z)
+      ?:  =(y w)  [-.c sa %h]
+      ?:  (^^lth y w)  [-.c sa %u]  [-.c sa %d]
     ::
     ++  frd                                             ::  a/2, rounds to -inf
       |=  [a=@s]
@@ -255,7 +272,7 @@
       |=  [a=[e=@s a=@u]]  ^-  fn
       =+  v=(ibl a)
       ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
-        [%f & ?:(=(r %u) spd zer)]
+        [%f & ?:(|(=(r %u) =(r %a)) sps zer)]
       =.  a
         =+  [w=(met 0 a.a) x=(^^mul prc 2)]
         =+  ?:((^^lth w x) (^^sub x w) 0)
@@ -264,6 +281,18 @@
         a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
       =+  [y=(itr a.a) z=(frd e.a)]
       (rau [z -.y] +.y)
+    ::
+    ++  isr
+      |=  [a=[e=@s a=@u]]  ^-  fn
+      =.  a
+        =+  [w=(met 0 a.a) x=(^^mul prc 2)]
+        =+  ?:((^^lth w x) (^^sub x w) 0)
+        =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
+          (^^add - 1)
+        a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
+      =+  [y=(iir a.a) z=(frd e.a)]
+      =+  q=(new:si !(syn:si z) (abs:si z))
+      (rau [(dif:si q (sun:si +<.y)) -.y] +>.y)
     ::
     ++  lth
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
@@ -346,12 +375,12 @@
       ?~  a.a
         ?-  t
           %fl  [%f & zer]  %sm  [%f & zer]
-          %ce  [%f & spd]  %lg  [%f & spd]
-          %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
-               [%f & ?:((^^lth b (bex (dec q))) zer spd)]
-          %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
-               [%f & ?:((^^lth b (bex (dec q))) zer spd)]
-          %na  [%f & ?:((^^lth b (bex (dec q))) zer spd)]
+          %ce  [%f & sps]  %lg  [%f & sps]
+          %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer sps)]
+               [%f & ?:((^^lth b (bex (dec q))) zer sps)]
+          %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer sps)]
+               [%f & ?:((^^lth b (bex (dec q))) zer sps)]
+          %na  [%f & ?:((^^lth b (bex (dec q))) zer sps)]
         ==
       ::
       =.  a  (xpd a)                                    ::  expand
@@ -442,15 +471,16 @@
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
+    ++  sps  ?:(den spd spn)
     ++  spd  [emn 1]                                    ::  smallest "denormal"
-    ++  spn  [emm 1]                                    ::  smallest "normal"
+    ++  spn  [emn (bex (dec prc))]                      ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
     ++  zer  [--0 0]                                    ::  zero
     --
   --
 ::
 ++  ff                                                  ::  ieee754 format
-  |_  [w=@u p=@u b=@s d=? r=?(%n %u %d %z %a)]
+  |_  [[w=@u p=@u b=@s d=?] r=?(%n %u %d %z %a)]
   ::
   ++  sz  +((^add w p))
   ++  sb  (bex (^add w p))
