@@ -8,11 +8,12 @@
 ::::
 |%
 ++  fl
-  |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a)]
+  |_  [[p=@u v=@s w=@u d=?] r=?(%n %u %d %z %a)]
   ::  p=precision: number of bits in arithmetic form, including "hidden bit"
   ::               must be at least 2
   ::  v=minimum value of e
   ::  w=width: max - min value of e, w=0 is fixed point
+  ::  d=return denormals/subnormals
   ::  r=rounding mode: round to nearest (ties to even), round up, round down,
   ::                   round to zero, round away from zero
   ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
@@ -22,7 +23,7 @@
   ++  rou
     |=  [a=fn]  ^-  fn
     ?.  ?=([%f *] a)  a
-    ?~  a.a  [%f s.a --0 0]
+    ?~  a.a  [%f s.a zer:m]
     ?:  s.a  (rou:m +>.a)
     =.(r swr:m (fli (rou:m +>.a)))
   ::
@@ -39,7 +40,7 @@
       ?:  ?=([%i *] a)  a  b
     ?:  |(=(a.a 0) =(a.b 0))
       ?.  &(=(a.a 0) =(a.b 0))  %-  rou  ?~(a.a b a)
-      [%f ?:(=(r %d) &(s.a s.b) |(s.a s.b)) --0 0]
+      [%f ?:(=(r %d) &(s.a s.b) |(s.a s.b)) zer:m]
     ?:  =(s.a s.b)
       ?:  s.a  (add:m +>.a +>.b)
       =.(r swr:m (fli (add:m +>.a +>.b)))
@@ -57,7 +58,7 @@
       ?:  =(a.b 0)  [%n ~]  [%i =(s.a s.b)]
     ?:  ?=([%i *] b)
       ?:  =(a.a 0)  [%n ~]  [%i =(s.a s.b)]
-    ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
+    ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) zer:m]
     ?:  =(s.a s.b)  (mul:m +>.a +>.b)
     =.(r swr:m (fli (mul:m +>.a +>.b)))
   ::
@@ -66,8 +67,8 @@
     ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
     ?:  ?=([%i *] a)
       ?:  ?=([%i *] b)  [%n ~]  [%i =(s.a s.b)]
-    ?:  ?=([%i *] b)  [%f =(s.a s.b) --0 0]
-    ?:  =(a.a 0)  ?:  =(a.b 0)  [%n ~]  [%f =(s.a s.b) --0 0]
+    ?:  ?=([%i *] b)  [%f =(s.a s.b) zer:m]
+    ?:  =(a.a 0)  ?:  =(a.b 0)  [%n ~]  [%f =(s.a s.b) zer:m]
     ?:  =(a.b 0)  [%i =(s.a s.b)]
     ?:  =(s.a s.b)  (div:m +>.a +>.b)
     =.(r swr:m (fli (div:m +>.a +>.b)))
@@ -81,7 +82,7 @@
         ?:  =(a.b 0)  [%n ~]  [%i =(s.a s.b)]
       ?:  ?=([%i *] b)
         ?:  =(a.a 0)  [%n ~]  [%i =(s.a s.b)]
-      ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) --0 0]
+      ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) zer:m]
       [%f =(s.a s.b) (sum:si e.a e.b) (^mul a.a a.b)]
     (add x c)
   ::
@@ -89,7 +90,7 @@
     |=  [a=fn]  ^-  fn
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  ?:(s.a a [%n ~])
-    ?~  a.a  [%f s.a --0 0]
+    ?~  a.a  [%f s.a zer:m]
     ?:  s.a  (sqt:m +>.a)  [%n ~]
   ::
   ++  lth
@@ -221,22 +222,27 @@
       ?:  d  (sub [(sum:si e.a e.b) (^^mul a.a a.b)] c)
       (sub c [(sum:si e.a e.b) (^^mul a.a a.b)])
     ::
-    ::  integer square root w/rounding info: sqrt((rsh 1 b a))
+    ::  integer square root w/rounding info
     ++  itr
-      |=  [a=@ b=@]  ^-  [@ ?(%e %d %h %u)]
-      =>  .(a (lsh 1 1 a), b +(b))
+      |=  [a=@]  ^-  [@ ?(%e %d %h %u)]
+      =.  a  (lsh 0 2 a)
       =+  [q=(^^div (dec (xeb a)) 2) r=0]
       =+  ^=  c
         |-  =+  s=(^^add r (bex q))
         =+  (^^mul s s)
-        ?:  |(=(q 0) =(q b))
+        ?:  =(q 0)
           ?:  (^^lte - a)  [s -]  [r (^^mul r r)]
         ?:  (^^lte - a)  $(r s, q (dec q))  $(q (dec q))
-      =+  z=(rsh 0 b -.c)
+      =+  z=(rsh 0 1 -.c)
       ?:  =(+.c a)  [z %e]
-      =+  v=(^^add -.c (lsh 0 (dec b) 1))
+      =+  v=(^^add -.c 1)
       =+  y=(^^mul v v)
       ?:  =(y a)  [z %h]  ?:((^^lth y a) [z %u] [z %d])
+    ::
+    ::  integer inverse square root w/shift amount & rounding info
+    ++  iir
+      |=  [a=@]  ^-  [@ @ ?(%e %d %h %u)]
+      !!
     ::
     ++  frd                                             ::  a/2, rounds to -inf
       |=  [a=@s]
@@ -256,8 +262,7 @@
         =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
           (^^add - 1)                                   ::  enforce even exponent
         a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
-      =+  x=(^^sub (^^div (met 0 a.a) 2) prc)
-      =+  [y=(itr a.a x) z=(sum:si (sun:si x) (frd e.a))]
+      =+  [y=(itr a.a) z=(frd e.a)]
       (rau [z -.y] +.y)
     ::
     ++  lth
@@ -353,9 +358,10 @@
       ::
       =.  a  %-  unj
         ?-  t
-          %fl  a  %lg  a(a +(a.a))
+          %fl  a
+          %lg  a(a +(a.a))
           %sm  ?.  &(=(b 0) =(f %e))  a
-               ?:  =(e.a emn)  a(a (dec a.a))           ::  this is a bit awkward
+               ?:  =(e.a emn)  a(a (dec a.a))
                =+  y=(dec (^^mul a.a 2))
                ?.  (^^lte (met 0 y) prc)  a(a (dec a.a))
                [(dif:si e.a -1) y]
@@ -377,6 +383,7 @@
                ?:  (^^lth b y)  a  a(a +(a.a))
         ==
       ?~  a.a  [%f & zer]
+      ?.  |(den =((met 0 a.a) prc))  [%f & zer] 
       ::
       =+  x=(dif:si e.a emx)
       ?:  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
@@ -431,6 +438,7 @@
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
+    ++  den  d
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
@@ -442,7 +450,7 @@
   --
 ::
 ++  ff                                                  ::  ieee754 format
-  |_  [w=@u p=@u b=@s r=?(%n %u %d %z %a)]
+  |_  [w=@u p=@u b=@s d=? r=?(%n %u %d %z %a)]
   ::
   ++  sz  +((^add w p))
   ++  sb  (bex (^add w p))
@@ -450,7 +458,7 @@
   ++  pa
     =+  i=(dif:si --1 b)
     =+  q=fl
-    q(p +(p), v i, w (^sub (bex w) 3), r r)
+    q(p +(p), v i, w (^sub (bex w) 3), d d, r r)
   ::
   ++  sea
     |=  [a=@r]  ^-  fn
@@ -497,12 +505,12 @@
   ++  gth  |=  [a=@r b=@r]  (gth:pa (sea a) (sea b))
   --
 ::
-++  rh  =>  ff  .(w 5, p 10, b --15, r %n)
-++  rs  =>  ff  .(w 8, p 23, b --127, r %n)
-++  rq  =>  ff  .(w 15, p 112, b --16.383, r %n)
+++  rh  =>  ff  .(w 5, p 10, b --15, d %.y, r %n)
+++  rs  =>  ff  .(w 8, p 23, b --127, d %.y, r %n)
+++  rq  =>  ff  .(w 15, p 112, b --16.383, d %.y, r %n)
 ::
 ++  rd
-  =+  ma==>(ff .(w 11, p 52, b --1.023, r %n))
+  =+  ma==>(ff .(w 11, p 52, b --1.023, d %.y, r %n))
   |%
   ++  sea
     |=  [a=@rd]  (sea:ma a)
