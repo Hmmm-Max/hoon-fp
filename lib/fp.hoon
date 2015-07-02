@@ -99,6 +99,11 @@
     ?:  ?=([%i *] a)  [%n ~]
     ?~  a.a  [%n ~]
     ?:  s.a  (isr:m +>.a)  [%n ~]
+  ::
+  ++  inv
+    |=  [a=fn]  ^-  fn
+    (div [%f & --0 1] a)
+  ::
   ++  lth
     |=  [a=fn b=fn]  ^-  (unit ,?)
     ?:  |(?=([%n *] a) ?=([%n *] b))  ~  :-  ~
@@ -270,9 +275,6 @@
     ::
     ++  sqt
       |=  [a=[e=@s a=@u]]  ^-  fn
-      =+  v=(ibl a)
-      ?:  =((cmp:si (frd v) (dif:si emn --1)) -1)
-        [%f & ?:(|(=(r %u) =(r %a)) sps zer)]
       =.  a
         =+  [w=(met 0 a.a) x=(^^mul prc 2)]
         =+  ?:((^^lth w x) (^^sub x w) 0)
@@ -361,6 +363,12 @@
     ::  %h: a = (a.a+.5)*2^e.a ||  %u: (a.a+.5)*2^e.a < a < (a.a+ 1)*2^e.a
     ++  lug
       |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
+      ::
+      =-                                                ::  if !den, flush denormals to zero
+        ?:  den  -
+        ?.  ?=([%f *] -)  -
+        ?:  =((met 0 ->+>) prc)  -  [%f & zer]
+      ::
       =+  m=(met 0 a.a)
       ?>  |(=(f %e) (^gte m (rpr e.a)))                 ::  if not %e, need sufficient precision
       =+  ^=  q
@@ -375,12 +383,12 @@
       ?~  a.a
         ?-  t
           %fl  [%f & zer]  %sm  [%f & zer]
-          %ce  [%f & sps]  %lg  [%f & sps]
-          %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer sps)]
-               [%f & ?:((^^lth b (bex (dec q))) zer sps)]
-          %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer sps)]
-               [%f & ?:((^^lth b (bex (dec q))) zer sps)]
-          %na  [%f & ?:((^^lth b (bex (dec q))) zer sps)]
+          %ce  [%f & spd]  %lg  [%f & spd]
+          %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+               [%f & ?:((^^lth b (bex (dec q))) zer spd)]
+          %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+               [%f & ?:((^^lth b (bex (dec q))) zer spd)]
+          %na  [%f & ?:((^^lth b (bex (dec q))) zer spd)]
         ==
       ::
       =.  a  (xpd a)                                    ::  expand
