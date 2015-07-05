@@ -9,16 +9,12 @@
 |%
 ++  fl
   |_  [[p=@u v=@s w=@u d=?] r=?(%n %u %d %z %a)]
-  ::  p=precision: number of bits in arithmetic form, including "hidden bit"
-  ::               must be at least 2
-  ::  v=minimum value of e
-  ::  w=width: max - min value of e, w=0 is fixed point
-  ::  d=return denormals/subnormals
-  ::  r=rounding mode: round to nearest (ties to even), round up, round down,
-  ::                   round to zero, round away from zero
-  ::  binary32: [24 -149 253 r] (-149 = -126 - 24 + 1)
-  ::  binary16: [11 -24 29 r] binary64: [53 -1074 2045 r]
-  ::  binary128: [113 -16494 32765 r]
+  ::  p=precision:     number of bits in arithmetic form; must be at least 2
+  ::  v=min exponent:  minimum value of e
+  ::  w=width:         max - min value of e, 0 is fixed point
+  ::  d=denormals:     return denormals if %.y,
+  ::                   flush denormals to zero (but not inputs!) if %.n
+  ::  r=rounding mode: nearest (ties to even), up, down, to zero, away from zero
   ::
   ++  rou
     |=  [a=fn]  ^-  fn
@@ -333,8 +329,8 @@
       |-  ?:  =((end 0 1 a.a) 1)  a
       $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
     ::
-    ++  unj
-      |=  [a=[e=@s a=@u]]
+    ++  unj                                             ::  used internally by rounding
+      |=  [a=[e=@s a=@u]]                               ::  not useful in other contexts
       =+  ma=(met 0 a.a)
       ?:  =(ma +(prc))
         a(a (rsh 0 1 a.a), e (sum:si e.a --1))
