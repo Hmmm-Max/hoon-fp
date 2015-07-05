@@ -191,7 +191,7 @@
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
       =+  q=(dif:si e.a e.b)
       |-  ?.  (syn:si q)
-      (fli $(b a, a b, q +(q), r swr))
+        (fli $(b a, a b, q +(q), r swr))
       =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
       =+  ^=  w  %+  dif:si  e.a  %-  sun:si
         ?:  (^gth prc ma)  (^^sub prc ma)  0
@@ -203,7 +203,8 @@
           %n  (lag %nt a)
         ==
       =+  j=(lsh 0 (abs:si q) a.a)
-      |-  ?.  (^gte j a.b)  (fli $(a.b j, j a.b, r swr))
+      |-  ?.  (^gte j a.b)
+        (fli $(a.b j, j a.b, r swr))
       =+  i=(^^sub j a.b)
       ?~  i  [%f & zer]  (rou [e.b i])
     ::
