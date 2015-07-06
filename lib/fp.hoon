@@ -56,7 +56,7 @@
         ?:  =(a b)  a  [%n ~]
       ?:  ?=([%i *] a)  a  b
     ?:  |(=(a.a 0) =(a.b 0))
-      ?.  &(=(a.a 0) =(a.b 0))  %-  rou  ?~(a.a b a)
+      ?.  &(=(a.a 0) =(a.b 0))  ?~(a.a b a)
       [%f ?:(=(r %d) &(s.a s.b) |(s.a s.b)) zer:m]
     ?:  =(s.a s.b)
       ?:  s.a  (add:m +>.a +>.b &)
@@ -103,16 +103,7 @@
   ::
   ++  fma
     |=  [a=fn b=fn c=fn]  ^-  fn                        ::  a * b + c
-    ?:  |(?=([%n *] a) ?=([%n *] b) ?=([%n *] c))  [%n ~]
-    =+  ^=  x
-      ?:  ?=([%i *] a)
-        ?:  ?=([%i *] b)  [%i =(s.a s.b)]
-        ?:  =(a.b 0)  [%n ~]  [%i =(s.a s.b)]
-      ?:  ?=([%i *] b)
-        ?:  =(a.a 0)  [%n ~]  [%i =(s.a s.b)]
-      ?:  |(=(a.a 0) =(a.b 0))  [%f =(s.a s.b) zer:m]
-      [%f =(s.a s.b) (sum:si e.a e.b) (^mul a.a a.b)]
-    (add x c)
+    (add (emu a b) c)
   ::
   ++  sqt
     |=  [a=fn]  ^-  fn
@@ -190,21 +181,28 @@
       (mul [%f s.a --0 a.a] [%f & e.a (pow:m 5 q)])
     (div [%f s.a --0 a.a] [%f & (sun:si q) (pow:m 5 q)])
   ::
+  ++  cep                                               ::  mimic mpfr
+    %=  .
+      d  %.n
+      v  (new:si | (^add (dec (bex 30)) prc:m))
+      w  (^mul (dec (bex 30)) 2)
+    ==
+  ::
   ++  c                                                 ::  mathematical constants
     |%
     ++  pi
       |-  ^-  fn
       =-
-        =+  wp=(^add prc:m 8)
+        =+  wp=(^add prc:m 16)
         |-  =+  [x=(bnd:m (pj wp))]
         ?~  x  $(wp (^add wp 32))  +.x
       ::
       ^=  pj
       |=  [p=@]  ^-  [fn fn]
-      =>  .(r %n, ^p p)
-      =+  a=`fn`[%f & --0 1]
-      =+  [b=`fn`[%f & -1 1] d=`fn`[%f & -2 1]]
-      =+  [la=a k=0]
+      =>  .(r %n, ^p p, d |)
+      =>  cep
+      =+  [a=`fn`[%f & --0 1] b=`fn`[%f & -1 1]]
+      =+  [d=`fn`[%f & -2 1] la=a k=0]
       |-
       =+  ^=  s
         =+  q=(ned:m (add a b))
@@ -222,13 +220,9 @@
         =+  q=(ned:m (sub a s))
         q(e (sum:si e.q --1))
       ::?>  (chb:m b [%f | -1 1] [%f & -1 3])
-      =.  d
-        =+  q=(ned:m (ead a (fli b)))
-        ::?>  (need (lth q [%f & --0 1]))
-        =+  y=q(e (sum:si e.q (sun:si k)))
-        (sub d y)
-      =+  ^=  e
-        =>  .(r %a)  (sub a b)
+      =+  e=(ned:m (ead a (fli b)))
+      ::?>  (need (lth e [%f & --0 1]))
+      =.  d  (sub d e(e (sum:si e.e (sun:si k))))
       =+  f=(dif:si (sun:si k) (sun:si p))
       ?:  (need (gth (abs e) [%f & f 1]))
         $(k +(k))
@@ -238,7 +232,11 @@
     --
   ::
   ++  e                                                 ::  elementary functions
-    !!
+    |%
+    ++  cos
+      |=  [a=fn]  ^-  fn
+      !!
+    --
   ::
   ++  m                                                 ::  internal functions, constants
     |%                                                  ::  don't put 0s into [@s @u] args
@@ -512,8 +510,8 @@
         ==
       ?~  a.a  [%f & zer]
       ::
-      =+  x=(dif:si e.a emx)
-      ?:  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
+      =+  x=(dif:si emx e.a)
+      ?.  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
     ::
     ++  drg                                             ::  dragon4
       |=  [a=[e=@s a=@u]]  ^-  [@s @u]
