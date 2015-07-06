@@ -15,8 +15,8 @@
 ::|=  [* [[a=[?(%fl %ce %ne %na %nt %lg %sm) [@s @u] ?(%e %d %h %u)] ~] ~]]
 :::-  %noun  (lug:m:fs a)
 ::
-|=  [* [[a=[@s @u] ~] ~]]
-:-  %noun  (drg:fs (isr:m:fs a))
+|=  [* [[a=[@u] ~] ~]]
+:-  %noun  (drg:fs pi:c:fs)
 ::
 ::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
 ::=+  [fu=fs(r %u) fd=fs(r %d) fz=fs(r %z) fa=fs(r %a)]
