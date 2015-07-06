@@ -8,14 +8,13 @@
 ::::
 |%
 ++  fl
-  |_  [[p=@u v=@s w=@u d=?] r=?(%n %u %d %z %a)]
+  |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a) d=?(%d %f %i)]
   ::  p=precision:     number of bits in arithmetic form; must be at least 2
   ::  v=min exponent:  minimum value of e
   ::  w=width:         max - min value of e, 0 is fixed point
-  ::  d=denormals:     return denormals if %.y,
-  ::                   flush denormals to zero (but not inputs!) if %.n
   ::  r=rounding mode: nearest (ties to even), up, down, to zero, away from zero
-  ::
+  ::  d=behavior:      return denormals, flush denormals to zero,
+  ::                   infinite exponent range
   ++  rou
     |=  [a=fn]  ^-  fn
     ?.  ?=([%f *] a)  a
@@ -181,13 +180,6 @@
       (mul [%f s.a --0 a.a] [%f & e.a (pow:m 5 q)])
     (div [%f s.a --0 a.a] [%f & (sun:si q) (pow:m 5 q)])
   ::
-  ++  cep                                               ::  mimic mpfr
-    %=  .
-      d  %.n
-      v  (new:si | (^add (dec (bex 30)) prc:m))
-      w  (^mul (dec (bex 30)) 2)
-    ==
-  ::
   ++  c                                                 ::  mathematical constants
     |%
     ++  pi
@@ -199,8 +191,7 @@
       ::
       ^=  pj
       |=  [p=@]  ^-  [fn fn]
-      =>  .(r %n, ^p p, d |)
-      =>  cep
+      =>  .(r %n, ^p p, d %i)
       =+  [a=`fn`[%f & --0 1] b=`fn`[%f & -1 1]]
       =+  [d=`fn`[%f & -2 1] la=a k=0]
       |-
@@ -422,17 +413,24 @@
       $(a.a (rsh 0 1 a.a), e.a (sum:si e.a --1))
     ::
     ++  unj                                             ::  used internally by rounding
-      |=  [a=[e=@s a=@u]]                               ::  not useful in other contexts
+      |=  [a=[e=@s a=@u]]
       =+  ma=(met 0 a.a)
       ?:  =(ma +(prc))
         a(a (rsh 0 1 a.a), e (sum:si e.a --1))
-      ?>  |(=(ma prc) &(=(e.a emn) (^^lth ma prc)))
+      ?>  ?|
+            =(ma prc)
+            &(!=(den %i) =(e.a emn) (^^lth ma prc))
+          ==
       a
     ::
-    ::  assumes that (met 0 a.a) <= prc and emn <= e.a!!
+    ::  assumes that (met 0 a.a) <= prc!!
     ++  xpd
       |=  [a=[e=@s a=@u]]
-      =+  (min (abs:si (dif:si e.a emn)) (^^sub prc (met 0 a.a)))
+      =+  ?:  =(den %i)  (^^sub prc (met 0 a.a))
+          =+  ^=  q
+            =+  w=(dif:si e.a emn)
+            ?:  (syn:si w)  (abs:si w)  0
+          (min q (^^sub prc (met 0 a.a)))
       a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
     ::  required precision for %d, %h, %u
@@ -454,7 +452,7 @@
       |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
       ::
       =-                                                ::  if !den, flush denormals to zero
-        ?:  den  -
+        ?.  =(den %f)  -
         ?.  ?=([%f *] -)  -
         ?:  =((met 0 ->+>) prc)  -  [%f & zer]
       ::
@@ -464,12 +462,14 @@
         =+  ^=  f                                       ::  reduce precision
           ?:  (^gth m prc)  (^^sub m prc)  0
         =+  ^=  g  %-  abs:si                           ::  enforce min. exp
+          ?:  =(den %i)  --0
           ?:  =((cmp:si e.a emn) -1)  (dif:si emn e.a)  --0
         (max f g)
       =^  b  a  :-  (end 0 q a.a)
         a(e (sum:si e.a (sun:si q)), a (rsh 0 q a.a))
       ::
       ?~  a.a
+        ?<  =(den %i)
         ?-  t
           %fl  [%f & zer]  %sm  [%f & zer]
           %ce  [%f & spd]  %lg  [%f & spd]
@@ -487,7 +487,7 @@
           %fl  a
           %lg  a(a +(a.a))
           %sm  ?.  &(=(b 0) =(f %e))  a
-               ?:  =(e.a emn)  a(a (dec a.a))
+               ?:  &(=(e.a emn) !=(den %i))  a(a (dec a.a))
                =+  y=(dec (^^mul a.a 2))
                ?.  (^^lte (met 0 y) prc)  a(a (dec a.a))
                [(dif:si e.a -1) y]
@@ -510,16 +510,13 @@
         ==
       ?~  a.a  [%f & zer]
       ::
+      ?:  =(den %i)  [%f & a]
       =+  x=(dif:si emx e.a)
       ?.  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
     ::
     ++  drg                                             ::  dragon4
       |=  [a=[e=@s a=@u]]  ^-  [@s @u]
-      =.  a
-        ?:  ?&  (^^lth (met 0 a.a) prc)
-                (syn:si (dif:si e.a emn))
-            ==
-          (xpd a)  a
+      =.  a  ?:  (^^lth (met 0 a.a) prc)  (xpd a)  a
       =+  r=(lsh 0 ?:((syn:si e.a) (abs:si e.a) 0) a.a)
       =+  s=(lsh 0 ?.((syn:si e.a) (abs:si e.a) 0) 1)
       =+  m=(lsh 0 ?:((syn:si e.a) (abs:si e.a) 0) 1)
@@ -582,7 +579,7 @@
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
-    ++  sps  ?:(den spd spn)
+::    ++  sps  ^-  [@s @u]  ?-(den %d spd, %f spn, %i !!)
     ++  spd  [emn 1]                                    ::  smallest "denormal"
     ++  spn  [emn (bex (dec prc))]                      ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
@@ -591,7 +588,7 @@
   --
 ::
 ++  ff                                                  ::  ieee754 format
-  |_  [[w=@u p=@u b=@s d=?] r=?(%n %u %d %z %a)]
+  |_  [[w=@u p=@u b=@s f=?] r=?(%n %u %d %z %a)]
   ::
   ++  sz  +((^add w p))
   ++  sb  (bex (^add w p))
@@ -599,7 +596,7 @@
   ++  pa
     =+  i=(dif:si --1 b)
     =+  q=fl
-    q(p +(p), v i, w (^sub (bex w) 3), d d, r r)
+    q(p +(p), v i, w (^sub (bex w) 3), d ?:(f %f %d), r r)
   ::
   ++  sea
     |=  [a=@r]  ^-  fn
@@ -646,12 +643,12 @@
   ++  gth  |=  [a=@r b=@r]  (gth:pa (sea a) (sea b))
   --
 ::
-++  rh  =>  ff  .(w 5, p 10, b --15, d %.y, r %n)
-++  rs  =>  ff  .(w 8, p 23, b --127, d %.y, r %n)
-++  rq  =>  ff  .(w 15, p 112, b --16.383, d %.y, r %n)
+++  rh  =>  ff  .(w 5, p 10, b --15, f %.n, r %n)
+++  rs  =>  ff  .(w 8, p 23, b --127, f %.n, r %n)
+++  rq  =>  ff  .(w 15, p 112, b --16.383, f %.n, r %n)
 ::
 ++  rd
-  =+  ma==>(ff .(w 11, p 52, b --1.023, d %.y, r %n))
+  =+  ma==>(ff .(w 11, p 52, b --1.023, f %.n, r %n))
   |%
   ++  sea
     |=  [a=@rd]  (sea:ma a)
