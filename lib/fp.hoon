@@ -196,9 +196,7 @@
       |-  ^-  fn
       =-
         =+  wp=(^add prc:m 8)
-        |-
-        =+  q=(pj wp)
-        =+  x=(bnd:m q)
+        |-  =+  [x=(bnd:m (pj wp))]
         ?~  x  $(wp (^add wp 32))  +.x
       ::
       ^=  pj
@@ -209,22 +207,24 @@
       =+  [la=a k=0]
       |-
       =+  ^=  s
-        =+  q=(add a b)
-        ?.  ?=([%f *] q)  !!
+        =+  q=(ned:m (add a b))
         q(e (dif:si e.q --2))
+      ::?>  (chb:m s [%f & -2 1] [%f & -1 1])
       =+  lb=(sqt b)
+      ::?>  (chb:m lb [%f & -1 1] [%f & --0 1])
       =.  la
-        =+  q=(add la lb)
-        ?.  ?=([%f *] q)  !!
+        =+  q=(ned:m (add la lb))
         q(e (dif:si e.q --1))
+      ::?>  (chb:m la [%f & -1 1] [%f & --0 1])
       =.  a  (mul la la)
+      ::?>  (chb:m a [%f & -2 1] [%f & --0 1])
       =.  b
-        =+  q=(sub a s)
-        ?.  ?=([%f *] q)  !!
+        =+  q=(ned:m (sub a s))
         q(e (sum:si e.q --1))
+      ::?>  (chb:m b [%f | -1 1] [%f & -1 3])
       =.  d
-        =+  q=(ead a (fli b))
-        ?.  ?=([%f *] q)  !!
+        =+  q=(ned:m (ead a (fli b)))
+        ::?>  (need (lth q [%f & --0 1]))
         =+  y=q(e (sum:si e.q (sun:si k)))
         (sub d y)
       =+  ^=  e
@@ -233,7 +233,7 @@
       ?:  (need (gth (abs e) [%f & f 1]))
         $(k +(k))
       =+  ^=  g
-        (dif:si (^add (^mul k 2) 8) p)
+        (dif:si (sun:si (^add (^mul k 2) 8)) (sun:si p))
       [(div b d) [%f & g 1]]
     --
   ::
@@ -566,9 +566,17 @@
     ++  bnd
       |=  [a=fn b=fn]  ^-  (unit fn)
       =+  x=(^add a b)
-      ?:  =(x (^sub a b))
-        [~ x]
-      ~
+      =+  y=(^sub a b)
+      ?:  =(x y)  [~ x]  ~
+    ::
+    ++  chb                                             ::  l <= a <= h
+      |=  [a=fn l=fn h=fn]  ^-  ?
+      &((fall (^lte l a) |) (fall (^lte a h) |))
+    ::
+    ++  ned
+      |=  [a=fn]  ^-  [%f s=? e=@s a=@u]
+      ?:  ?=([%f *] a)  a
+      ~|  %need-float  !!
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
