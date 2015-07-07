@@ -100,18 +100,18 @@
     ?:  =(s.a s.b)  (div:m +>.a +>.b)
     =.(r swr:m (fli (div:m +>.a +>.b)))
   ::
-  ++  fma
-    |=  [a=fn b=fn c=fn]  ^-  fn                        ::  a * b + c
+  ++  fma                                               ::  a * b + c
+    |=  [a=fn b=fn c=fn]  ^-  fn
     (add (emu a b) c)
   ::
-  ++  sqt
+  ++  sqt                                               ::  square root
     |=  [a=fn]  ^-  fn
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  ?:(s.a a [%n ~])
     ?~  a.a  [%f s.a zer:m]
     ?:  s.a  (sqt:m +>.a)  [%n ~]
   ::
-  ++  isr
+  ++  isr                                               ::  inverse square root
     |=  [a=fn]  ^-  fn
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  [%n ~]
@@ -251,7 +251,49 @@
     |%
     ++  cos
       |=  [a=fn]  ^-  fn
-      !!
+      =-
+        =+  wp=(^add prc:m 16)
+        |-  =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp 32))  +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =+  n=prc:m
+      =>  .(r %n, ^p p, d %i)
+      =.  a
+        =+  q=(ned:m pi:c)
+        (ned:m (rem:m a q(e (sum:si e.q --1))))
+      =+  k=-:(itr:m (^div n 2))
+      =+  ^=  i
+        =+  q=(ned:m =>(.(r %u) (mul a a)))
+        q(e (dif:si e.q (sun:si (^mul k 2))))
+      =+  [s=`fn`[%f & --0 1] t=`fn`[%f & --0 1] l=1]
+      |-
+      ?>  ?=([%f *] t)
+      ?.  ?|
+            =(a.t 0)
+            =+  q=(dif:si (ibl:m +>.t) --1)
+            =((cmp:si q (new:si | p)) -1) 
+          ==
+        =.  t  (ned:m =>(.(r %u) (mul t i)))
+        =+  ^=  q
+          =+  j=(^mul l 2)
+          (^mul j (dec j))
+        =.  t  (ned:m =>(.(r %u) (div t [%f & --0 q])))
+        =+  u=?~((end 0 1 l) t (fli t))
+        =.  s  (ned:m =>(.(r %d) (add s u)))
+        ?>  ?&
+              (need (lte [%f & -1 1] s))
+              (need (lte s [%f & --0 1]))
+            ==
+        $(l +(l))
+      =+  w=k
+      |-  ?~  k  :-  s
+        =+  q=(dif:si (sun:si (^mul w 2)) (sun:si p))
+        [%f & q +((^mul l 2))]
+      =.  s
+        =+  q=(ned:m =>(.(r %u) (mul s s)))
+        (sub q(e (sum:si e.q --1)) [%f & --0 1])
+      $(k (dec k))
     ::
     ++  sin
       |=  [a=fn]  ^-  fn
@@ -292,6 +334,37 @@
     ++  pow
       |=  [a=fn b=fn]  ^-  fn
       !!
+    ::
+    ++  agm                                             ::  arithmetic-geometric mean
+      |=  [a=fn b=fn]  ^-  fn
+      ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
+      ?:  |(?=([%i *] a) ?=([%i *] b))
+        ?:  &(?=([%i *] a) ?=([%i *] b))
+          ?:  =(s.a s.b)  a  [%n ~]
+        ?:  ?=([%i *] a)  a  b
+      =-
+        =+  wp=(^add prc:m 16)
+        |-  =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp 32))  +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  s=(ned:m (mul a b))
+      =+  u=(ned:m (sqt s))
+      =+  ^=  v
+        =+  q=(ned:m (add a b))
+        q(e (dif:si e.q --1))
+      =+  n=1  |-
+      =+  j=(ned:m (ead v (fli u)))
+      =+  ^=  y  |.  %+  cmp:si                         ::  using trap to delay computation
+          (dif:si (ibl:m +>.v) (ibl:m +>.j))            ::  until ensuring a.j != 0
+        (sun:si (^sub p 2))
+      ?:  |(=(a.j 0) =((y) --1))
+        [v [%f & e.v (^add (^mul n 18) 51)]]            ::  XX error bounds correct?
+      =+  ^=  nv
+        =+  q=(ned:m (add u v))
+        q(e (dif:si e.q --1))
+      $(v nv, u (ned:m (sqt (mul u v))), n +(n))
     --
   ::
   ++  m                                                 ::  internal functions, constants
@@ -640,6 +713,36 @@
       |=  [a=fn]  ^-  [%f s=? e=@s a=@u]
       ?:  ?=([%f *] a)  a
       ~|  %need-float  !!
+    ::
+    ++  cmd
+      |=  [a=@u b=@u]  ^-  @s
+      =+  c=(^^div a b)
+      =+  d=(mod a b)
+      =+  e=(^^mul d 2)
+      =+  ^=  f
+        ?:  (^^lth e b)  c
+        ?.  =(e b)  +(c)
+        ?~((end 0 1 c) c +(c))
+      (dif:si (sun:si a) (sun:si (^^mul b f)))
+    ::
+    ++  rem
+      |=  [a=fn b=fn]                                   ::  a cmod b
+      ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
+      ?:  |(?=([%i *] a) ?=([%i *] b))  [%n ~]
+      ?~  a.a  [%f & zer:m]  ?~  a.b  [%n ~]
+      =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
+      =+  ^=  q
+        ?.  =((cmp:si e.a e.b) -1)  --0
+        (dif:si e.b e.a)
+      =+  al=a(a (end 0 (abs:si q) a.a))
+      =+  ah=a(a (rsh 0 (abs:si q) a.a), e (sum:si e.a q))
+      =+  w=(abs:si (dif:si e.ah e.b))
+      =+  z=(mod (bex w) a.b)
+      =+  y=(old:si (cmd:m (^^mul a.a z) a.b))
+      =+  r=`fn`[%f -.y e.b +.y]
+      ?:  |((need (^lth r b(e (dif:si e.b --1)))) =(a.al 0))
+        (^add r al)
+      (^sub al r)
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
