@@ -123,8 +123,13 @@
     (div [%f & --0 1] a)
   ::
   ++  sun
-    |=  [a=@]  ^-  fn
+    |=  [a=@u]  ^-  fn
     (rou [%f & --0 a])
+  ::
+  ++  san
+    |=  [a=@s]  ^-  fn
+    =+  b=(old:si a)
+    (rou [%f -.b --0 +.b])
   ::
   ++  lth
     |=  [a=fn b=fn]  ^-  (unit ,?)
@@ -186,11 +191,10 @@
       |-  ^-  fn
       =-
         =+  wp=(^add prc:m 16)
-        |-  =+  [x=(bnd:m (pj wp))]
+        |-  =+  [x=(bnd:m (ka wp))]
         ?~  x  $(wp (^add wp 32))  +.x
       ::
-      ^=  pj
-      |=  [p=@]  ^-  [fn fn]
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
       =+  [a=`fn`[%f & --0 1] b=`fn`[%f & -1 1]]
       =+  [d=`fn`[%f & -2 1] la=a k=0]
@@ -198,21 +202,15 @@
       =+  ^=  s
         =+  q=(ned:m (add a b))
         q(e (dif:si e.q --2))
-      ::?>  (chb:m s [%f & -2 1] [%f & -1 1])
       =+  lb=(sqt b)
-      ::?>  (chb:m lb [%f & -1 1] [%f & --0 1])
       =.  la
         =+  q=(ned:m (add la lb))
         q(e (dif:si e.q --1))
-      ::?>  (chb:m la [%f & -1 1] [%f & --0 1])
       =.  a  (mul la la)
-      ::?>  (chb:m a [%f & -2 1] [%f & --0 1])
       =.  b
         =+  q=(ned:m (sub a s))
         q(e (sum:si e.q --1))
-      ::?>  (chb:m b [%f | -1 1] [%f & -1 3])
       =+  e=(ned:m (ead a (fli b)))
-      ::?>  (need (lth e [%f & --0 1]))
       =.  d  (sub d e(e (sum:si e.e (sun:si k))))
       =+  f=(dif:si (sun:si k) (sun:si p))
       ?:  (need (gth (abs e) [%f & f 1]))
@@ -220,12 +218,79 @@
       =+  ^=  g
         (dif:si (sun:si (^add (^mul k 2) 8)) (sun:si p))
       [(div b d) [%f & g 1]]
+    ::
+    ++  log2                                            ::  natural logarithm of 2
+      |-  ^-  fn
+      =-
+        =+  wp=(^add prc:m 4)
+        |-  =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp 9))  +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  n=+((^div p 3))
+      =+  o=(dec (^mul n 2))
+      =+  ^=  q  %-  sun
+        %+  ^mul  4
+        %+  ^mul  (bex (dec n))
+        %-  fac:m  [0 o]
+      =+  ^=  t  %-  sun
+        %+  ^mul  3
+        =+  [c=0 d=0]
+        |-  ?:  =(c n)  d
+        =+  ^=  e
+          =+  f=(fac:m 0 c)
+          %+  ^mul  (^mul f f)
+          %+  ^mul  (bex (^sub (dec n) c))
+          %+  fac:m  +((^mul c 2))  o
+        $(c +(c), d ?~((end 0 1 c) (^add d e) (^sub d e)))
+      [(div t q) [%f & (dif:si --2 (sun:si p)) 1]]
     --
   ::
   ++  e                                                 ::  elementary functions
     |%
     ++  cos
       |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  sin
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  tan
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  acos
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  asin
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  atan
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  exp
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  log
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  log2
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  log10
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  pow
+      |=  [a=fn b=fn]  ^-  fn
       !!
     --
   ::
@@ -265,17 +330,11 @@
       =+  q=(dif:si e.a e.b)
       |-  ?.  (syn:si q)
         (fli $(b a, a b, q +(q), r swr))
-      ?:  e
-        =+  j=(lsh 0 (abs:si q) a.a)
-        |-  ?.  (^gte j a.b)
-          (fli $(a.b j, j a.b, r swr))
-        =+  i=(^^sub j a.b)
-        ?~  i  [%f & zer]  [%f & e.b i]
       =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
       =+  ^=  w  %+  dif:si  e.a  %-  sun:si
         ?:  (^gth prc ma)  (^^sub prc ma)  0
       =+  ^=  x  %+  sum:si  e.b  (sun:si mb)
-      ?:  =((cmp:si w x) --1)
+      ?:  &(!e =((cmp:si w x) --1))
         ?-  r
           %z  (lag %sm a)  %d  (lag %sm a)
           %a  (lag %ce a)  %u  (lag %ce a)
@@ -285,7 +344,8 @@
       |-  ?.  (^gte j a.b)
         (fli $(a.b j, j a.b, r swr))
       =+  i=(^^sub j a.b)
-      ?~  i  [%f & zer]  (rou [e.b i])
+      ?~  i  [%f & zer]
+      ?:  e  [%f & e.b i]  (rou [e.b i])
     ::
     ++  mul
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  fn
@@ -511,8 +571,7 @@
       ?~  a.a  [%f & zer]
       ::
       ?:  =(den %i)  [%f & a]
-      =+  x=(dif:si emx e.a)
-      ?.  (syn:si x)  [%i &]  [%f & a]                  ::  enforce max. exp
+      ?:  =((cmp:si emx e.a) -1)  [%i &]  [%f & a]      ::  enforce max. exp
     ::
     ++  drg                                             ::  dragon4
       |=  [a=[e=@s a=@u]]  ^-  [@s @u]
@@ -557,6 +616,15 @@
       ?:  =((end 0 1 b) 1)
         (^^mul d a)
       d
+    ::
+    ++  fac                                             ::  b! / a!
+      |=  [a=@ b=@]
+      =+  x=(^^sub b a)
+      ?:  =(x 0)  1
+      ?:  =(x 1)  b
+      ?:  =(x 2)  (^^mul b (dec b))
+      =+  y=(^^div (^^add a b) 2)
+      (^^mul $(b y) $(a y))
     ::
     ++  bnd
       |=  [a=fn b=fn]  ^-  (unit fn)
