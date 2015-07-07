@@ -188,7 +188,7 @@
   ++  c                                                 ::  mathematical constants
     |%
     ++  pi
-      |-  ^-  fn
+      ~+  |-  ^-  fn
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -219,10 +219,10 @@
       [(div b d) [%f & g 1]]
     ::
     ++  log2                                            ::  natural logarithm of 2
-      |-  ^-  fn
+      ~+  |-  ^-  fn
       =-
-        =+  wp=(^add prc:m 4)
-        =+  nc=4
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -352,6 +352,18 @@
       !!
     ::
     ++  atan
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  cosh
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  sinh
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  tanh
       |=  [a=fn]  ^-  fn
       !!
     ::
@@ -783,8 +795,8 @@
       =+  ah=a(a (rsh 0 (abs:si q) a.a), e (sum:si e.a q))
       =+  w=(abs:si (dif:si e.ah e.b))
       =+  z=(mod (bex w) a.b)
-      =+  y=(old:si (cmd:m (^^mul a.a z) a.b))
-      =+  r=`fn`[%f -.y e.b +.y]
+      =+  x=(old:si (cmd:m (^^mul a.ah z) a.b))
+      =+  r=`fn`[%f -.x e.b +.x]
       ?:  |((need (^lth r b(e (dif:si e.b --1)))) =(a.al 0))
         (^add r al)
       (^sub al r)
