@@ -390,10 +390,14 @@
     ++  agm                                             ::  arithmetic-geometric mean
       |=  [a=fn b=fn]  ^-  fn
       ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
-      ?:  |(?=([%i *] a) ?=([%i *] b))
-        ?:  &(?=([%i *] a) ?=([%i *] b))
-          ?:  =(s.a s.b)  a  [%n ~]
-        ?:  ?=([%i *] a)  a  b
+      ?:  &(?=([%i *] a) ?=([%i *] b))
+        ?:  &(=(s.a s.b) s.a)  a  [%n ~]
+      ?:  ?=([%i *] a)  ?>  ?=([%f *] b)
+        ?:  |(=(a.b 0) !s.a)  [%n ~]  [%i &]
+      ?:  ?=([%i *] b)  ?>  ?=([%f *] a)
+        ?:  |(=(a.a 0) !s.b)  [%n ~]  [%i &]
+      ?:  |(=(a.a 0) =(a.b 0))  [%f & zer:m]
+      ?.  &(s.a s.b)  [%n ~]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -813,7 +817,6 @@
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
     ++  emx  (sum:si emn (sun:si w))
-::    ++  sps  ^-  [@s @u]  ?-(den %d spd, %f spn, %i !!)
     ++  spd  [emn 1]                                    ::  smallest "denormal"
     ++  spn  [emn (bex (dec prc))]                      ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest

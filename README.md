@@ -12,6 +12,7 @@
 
 ## Planned
 
+* Fix parsers, printing
 * Jets for multiple-precision (using MPFR which is under LGPL license)
 * Jets for ++rd, ++rs, possibly ++rq
 * Fractal demo
