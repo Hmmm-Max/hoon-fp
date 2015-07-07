@@ -191,25 +191,24 @@
       |-  ^-  fn
       =-
         =+  wp=(^add prc:m 16)
-        |-  =+  [x=(bnd:m (ka wp))]
-        ?~  x  $(wp (^add wp 32))  +.x
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
       =+  [a=`fn`[%f & --0 1] b=`fn`[%f & -1 1]]
       =+  [d=`fn`[%f & -2 1] la=a k=0]
       |-
-      =+  ^=  s
-        =+  q=(ned:m (add a b))
-        q(e (dif:si e.q --2))
+      =+  s=(shf:m (add a b) -2)
       =+  lb=(sqt b)
-      =.  la
-        =+  q=(ned:m (add la lb))
-        q(e (dif:si e.q --1))
+      =.  la  (shf:m (add la lb) -1)
       =.  a  (mul la la)
-      =.  b
-        =+  q=(ned:m (sub a s))
-        q(e (sum:si e.q --1))
+      =.  b  (shf:m (sub a s) --1)
       =+  e=(ned:m (ead a (fli b)))
       =.  d  (sub d e(e (sum:si e.e (sun:si k))))
       =+  f=(dif:si (sun:si k) (sun:si p))
@@ -223,8 +222,13 @@
       |-  ^-  fn
       =-
         =+  wp=(^add prc:m 4)
-        |-  =+  [x=(bnd:m (ka wp))]
-        ?~  x  $(wp (^add wp 9))  +.x
+        =+  nc=4
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
@@ -253,19 +257,21 @@
       |=  [a=fn]  ^-  fn
       =-
         =+  wp=(^add prc:m 16)
-        |-  =+  [x=(bnd:m (ka wp))]
-        ?~  x  $(wp (^add wp 32))  +.x
+        =+  nc=32
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =+  n=prc:m
       =>  .(r %n, ^p p, d %i)
-      =.  a
-        =+  q=(ned:m pi:c)
-        (ned:m (rem:m a q(e (sum:si e.q --1))))
+      =.  a  (ned:m (rem:m a (shf:m pi:c --1)))         ::  cmod 2pi
       =+  k=-:(itr:m (^div n 2))
-      =+  ^=  i
-        =+  q=(ned:m =>(.(r %u) (mul a a)))
-        q(e (dif:si e.q (sun:si (^mul k 2))))
+      =+  ^=  i  %+  shf:m  =>(.(r %u) (mul a a))
+        (new:si | (^mul k 2))
       =+  [s=`fn`[%f & --0 1] t=`fn`[%f & --0 1] l=1]
       |-
       ?>  ?=([%f *] t)
@@ -279,7 +285,7 @@
           =+  j=(^mul l 2)
           (^mul j (dec j))
         =.  t  (ned:m =>(.(r %u) (div t [%f & --0 q])))
-        =+  u=?~((end 0 1 l) t (fli t))
+        =+  u=?~((dis 1 l) t (fli t))
         =.  s  (ned:m =>(.(r %d) (add s u)))
         ?>  ?&
               (need (lte [%f & -1 1] s))
@@ -297,11 +303,45 @@
     ::
     ++  sin
       |=  [a=fn]  ^-  fn
-      !!
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=32
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =.  a  (ned:m (rem:m a (shf:m pi:c --1)))
+      =+  c==>(.(r %a) (cos a))
+      =+  t==>(.(r %a) (mul c c))
+      =+  u==>(.(r %z) (sub [%f & --0 1] t))
+      =+  s=(ned:m =>(.(r %z) (sqt u)))
+      :-  s(s +<.a)
+      =+  e=(sum:si (^mul (sun:si p) 2) e.s)
+      [%f & (dif:si --3 e) 1]
     ::
     ++  tan
       |=  [a=fn]  ^-  fn
-      !!
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=32
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  [s=(sin a) c=(cos a)]
+      =+  t=(div s c)
+      ?.  ?=([%f *] t)  [t [%f & zer:m]]
+      [t [%f & e.t 4]]
     ::
     ++  acos
       |=  [a=fn]  ^-  fn
@@ -344,8 +384,13 @@
         ?:  ?=([%i *] a)  a  b
       =-
         =+  wp=(^add prc:m 16)
-        |-  =+  [x=(bnd:m (ka wp))]
-        ?~  x  $(wp (^add wp 32))  +.x
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
@@ -744,8 +789,14 @@
         (^add r al)
       (^sub al r)
     ::
+    ++  shf
+      |=  [a=fn b=@s]
+      ?:  |(?=([%n *] a) ?=([%i *] a))  a
+      a(e (sum:si e.a b))
+    ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
+    ++  mxp  20.000                                     ::  max precision for some stuff
     ++  den  d
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
