@@ -331,7 +331,7 @@
       =+  u==>(.(r %z) (sub [%f & --0 1] t))
       =+  s=(ned:m =>(.(r %z) (sqt u)))
       :-  s(s +<.a)
-      =+  e=(sum:si (^mul (sun:si p) 2) e.s)
+      =+  e=(sum:si (sun:si (^mul p 2)) e.s)
       [%f & (dif:si --3 e) 1]
     ::
     ++  tan
