@@ -189,6 +189,13 @@
     |%
     ++  pi
       ~+  |-  ^-  fn
+      ?:  (^lth prc:m 1.200)
+        =+  ^=  ap  0wOg~qE.y5EMz.j4NCa.bwdMs.QiA2j.wyapY.NQ0wK.-FzIj.
+                      CO9hi.wxVzz.g4Tu-.l6rfd.eAcrc.2Iarv.9v53t.fUjlJ.
+                      rl72h.ui5Jn.pynDX.6Z4N2.WqoTX.mIb~R.OSZ0q.TXuUU.
+                      q~Jqy.p-BHF.YA4nN.b7-p9.a6phX.ehrfs.80vby.xoXY5.
+                      CdF8d.xNlQV.FF5z-.E~ijf.nUdBn.ifsEW.Sm76b.Ply25
+        (rau:m [-1.198 ap] %d)
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -220,6 +227,13 @@
     ::
     ++  log2                                            ::  natural logarithm of 2
       ~+  |-  ^-  fn
+      ?:  (^lth prc:m 1.200)
+        =+  ^=  ap  0wIn8nZ.Z7fuq.L9UXe.o0~bS.HQ3Pg.OpOCb.oJywQ.nmUKG.
+                      -yLDK.7owru.KIC5m.lkLJa.-xIgX.iWKds.4U8kg.DlPIF.
+                      4mCU9.jWmOx.oyiKz.56ILq.4j5Ye.7WVWF.L3Ijp.weOlL.
+                      EeNSl.~tbsI.W7IpR.BicHR.TWqZe.30Oi6.lvEos.L8eey.
+                      SySnN.gY~Rs.o7ZcE.h-RLX.A64dc.fyfVl.6yXBq.trvMu
+        (rau:m [-1.200 ap] %d)
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
