@@ -255,6 +255,7 @@
     |%
     ++  cos
       |=  [a=fn]  ^-  fn
+      ?.  ?=([%f *] a)  [%n ~]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=32
@@ -287,10 +288,6 @@
         =.  t  (ned:m =>(.(r %u) (div t [%f & --0 q])))
         =+  u=?~((dis 1 l) t (fli t))
         =.  s  (ned:m =>(.(r %d) (add s u)))
-        ?>  ?&
-              (need (lte [%f & -1 1] s))
-              (need (lte s [%f & --0 1]))
-            ==
         $(l +(l))
       =+  w=k
       |-  ?~  k  :-  s
@@ -303,6 +300,7 @@
     ::
     ++  sin
       |=  [a=fn]  ^-  fn
+      ?.  ?=([%f *] a)  [%n ~]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=32
@@ -326,6 +324,7 @@
     ::
     ++  tan
       |=  [a=fn]  ^-  fn
+      ?.  ?=([%f *] a)  [%n ~]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=32
@@ -684,7 +683,7 @@
                ?:  &(=(e.a emn) !=(den %i))  a(a (dec a.a))
                =+  y=(dec (^^mul a.a 2))
                ?.  (^^lte (met 0 y) prc)  a(a (dec a.a))
-               [(dif:si e.a -1) y]
+               [(dif:si e.a --1) y]
           %ce  ?:  &(=(b 0) =(f %e))  a  a(a +(a.a))
           %ne  ?~  b  ?.  =(q 0)  a
                  ?-  f
