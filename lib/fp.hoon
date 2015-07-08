@@ -59,7 +59,7 @@
       [%f ?:(=(r %d) &(s.a s.b) |(s.a s.b)) zer:m]
     ?:  =(s.a s.b)
       ?:  s.a  (add:m +>.a +>.b &)
-      =.(r swr:m (fli (add:m +>.a +>.b &)))
+      (fli (add:m +>.a +>.b &))
     ?:  s.a  (sub:m +>.a +>.b &)
     (sub:m +>.b +>.a &)
   ::
@@ -269,7 +269,13 @@
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =+  n=prc:m
       =>  .(r %n, ^p p, d %i)
-      =.  a  (ned:m (rem:m a (shf:m pi:c --1)))         ::  cmod 2pi
+      =.  a
+        =+  q=(ibl:m +>.a)
+        ?:  =((cmp:si q --1) -1)  a
+        =+  ^=  pi
+          =>  .(^p (^add ^p (abs:si q)))
+          (shf:m pi:c --1)
+        (ned:m (rem:m a pi))
       =+  k=-:(itr:m (^div n 2))
       =+  ^=  i  %+  shf:m  =>(.(r %u) (mul a a))
         (new:si | (^mul k 2))
@@ -313,7 +319,13 @@
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
-      =.  a  (ned:m (rem:m a (shf:m pi:c --1)))
+      =.  a
+        =+  q=(ibl:m +>.a)
+        ?:  =((cmp:si q --1) -1)  a
+        =+  ^=  pi
+          =>  .(^p (^add ^p (abs:si q)))
+          (shf:m pi:c --1)
+        (ned:m (rem:m a pi))
       =+  c==>(.(r %a) (cos a))
       =+  t==>(.(r %a) (mul c c))
       =+  u==>(.(r %z) (sub [%f & --0 1] t))
@@ -368,6 +380,22 @@
     ::
     ++  exp
       |=  [a=fn]  ^-  fn
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  ?:(s.a [%i &] [%f & zer:m])
+      ?~  a.a  (rou [%f & --0 1])
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=32
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =+  n=prc:m
+      =>  .(r %n, ^p p, d %i)
       !!
     ::
     ++  log
@@ -787,9 +815,11 @@
     ::
     ++  rem
       |=  [a=fn b=fn]                                   ::  a cmod b
+      =.  b  (abs b)
       ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
       ?:  |(?=([%i *] a) ?=([%i *] b))  [%n ~]
       ?~  a.a  [%f & zer:m]  ?~  a.b  [%n ~]
+      |-  ?.  s.a  =.(r swr (fli $(s.a &)))
       =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
       =+  ^=  q
         ?.  =((cmp:si e.a e.b) -1)  --0
