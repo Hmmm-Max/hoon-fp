@@ -235,8 +235,8 @@
                       SySnN.gY~Rs.o7ZcE.h-RLX.A64dc.fyfVl.6yXBq.trvMu
         (rau:m [-1.200 ap] %d)
       =-
-        =+  wp=(^add prc:m 8)
-        =+  nc=8
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -270,9 +270,10 @@
     ++  cos
       |=  [a=fn]  ^-  fn
       ?.  ?=([%f *] a)  [%n ~]
+      ?:  =(a.a 0)  (rou [%f & --0 1])
       =-
         =+  wp=(^add prc:m 16)
-        =+  nc=32
+        =+  nc=16
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -321,9 +322,10 @@
     ++  sin
       |=  [a=fn]  ^-  fn
       ?.  ?=([%f *] a)  [%n ~]
+      ?:  =(a.a 0)  [%f & zer:m]
       =-
         =+  wp=(^add prc:m 16)
-        =+  nc=32
+        =+  nc=16
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -353,7 +355,7 @@
       ?.  ?=([%f *] a)  [%n ~]
       =-
         =+  wp=(^add prc:m 8)
-        =+  nc=32
+        =+  nc=8
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -392,6 +394,18 @@
       |=  [a=fn]  ^-  fn
       !!
     ::
+    ++  acosh
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  asinh
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
+    ++  atanh
+      |=  [a=fn]  ^-  fn
+      !!
+    ::
     ++  exp
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
@@ -399,7 +413,7 @@
       ?~  a.a  (rou [%f & --0 1])
       =-
         =+  wp=(^add prc:m 16)
-        =+  nc=32
+        =+  nc=16
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -414,11 +428,58 @@
     ::
     ++  log
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  ?:(s.a [%i &] [%n ~])
+      ?~  a.a  [%i |]  ?.  s.a  [%n ~]
+      ?:  (need (equ a [%f & --0 1]))  [%f & zer:m]
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  ^=  n
+        =+  q=(sun:si (^div +(^p) 2))
+        (sum:si (dif:si q (ibl:m +>.a)) --2)
+      =.  a  (ned:m (shf:m a n))
+      =.  a  (ned:m (agm [%f & --0 1] (div [%f & --0 4] a)))
+      =.  a  (ned:m (shf:m a --1))
+      =.  a  (ned:m (div pi:c a))
+      =+  j=(old:si n)
+      =+  q=(mul [%f -.j --0 +.j] log2:c)
+      =+  b=(ned:m (sub a q))
+      =+  e=(dif:si (ibl:m +>.a) (ibl:m +>.b))
+      :-  b  [%f & (sum:si e.b e) 11]
     ::
     ++  log2
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  ?:(s.a [%i &] [%n ~])
+      ?~  a.a  [%i |]  ?.  s.a  [%n ~]
+      =+  q=(ibl:m +>.a)
+      ?:  (need (equ a [%f & q 1]))
+        (rou [%f (syn:si q) --0 (abs:si q)])
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  [x=(bnd:m (ka wp))]
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |=  [p=@]  ^-  [fn fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  q==>(.(r %d) log2:c)
+      =+  z=(ned:m (div (log a) q))
+      :-  z  [%f & e.z 5]
     ::
     ++  log10
       |=  [a=fn]  ^-  fn
@@ -458,8 +519,7 @@
         q(e (dif:si e.q --1))
       =+  n=1  |-
       =+  j=(ned:m (ead v (fli u)))
-      =+  ^=  y  |.  %+  cmp:si                         ::  using trap to delay computation
-          (dif:si (ibl:m +>.v) (ibl:m +>.j))            ::  until ensuring a.j != 0
+      =+  ^=  y  |.  %+  cmp:si  %-  need  (cmp2:m v j)
         (sun:si (^sub p 2))
       ?:  |(=(a.j 0) =((y) --1))
         [v [%f & e.v (^add (^mul n 18) 51)]]            ::  XX error bounds correct?
@@ -852,6 +912,13 @@
       |=  [a=fn b=@s]
       ?:  |(?=([%n *] a) ?=([%i *] a))  a
       a(e (sum:si e.a b))
+    ::
+    ++  cmp2                                            ::  impl. of cmp2 as in
+      |=  [a=fn b=fn]  ^-  (unit ,@s)                   ::  mpfr's algorithms manual
+      ?>  &(?=([%f *] a) ?=([%f *] b))                  ::  XX unoptimized
+      ?~  a.a  !!
+      =+  c=(ned (ead a (fli b)))
+      ?~  a.c  ~  :-  ~  (dif:si (ibl +>.a) (ibl +>.b))
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
