@@ -195,7 +195,7 @@
                       rl72h.ui5Jn.pynDX.6Z4N2.WqoTX.mIb~R.OSZ0q.TXuUU.
                       q~Jqy.p-BHF.YA4nN.b7-p9.a6phX.ehrfs.80vby.xoXY5.
                       CdF8d.xNlQV.FF5z-.E~ijf.nUdBn.ifsEW.Sm76b.Ply25
-        (rau:m [-1.198 ap] %d)
+        (rau:m [-1.198 ap] &)
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -233,7 +233,7 @@
                       4mCU9.jWmOx.oyiKz.56ILq.4j5Ye.7WVWF.L3Ijp.weOlL.
                       EeNSl.~tbsI.W7IpR.BicHR.TWqZe.30Oi6.lvEos.L8eey.
                       SySnN.gY~Rs.o7ZcE.h-RLX.A64dc.fyfVl.6yXBq.trvMu
-        (rau:m [-1.200 ap] %d)
+        (rau:m [-1.200 ap] &)
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -422,7 +422,6 @@
         +.x
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
-      =+  n=prc:m
       =>  .(r %n, ^p p, d %i)
       !!
     ::
@@ -532,14 +531,14 @@
   ++  m                                                 ::  internal functions, constants
     |%                                                  ::  don't put 0s into [@s @u] args
     ++  rou
-      |=  [a=[e=@s a=@u]]  ^-  fn  (rau a %e)
+      |=  [a=[e=@s a=@u]]  ^-  fn  (rau a &)
     ::
     ++  rau
-      |=  [a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
+      |=  [a=[e=@s a=@u] t=?]  ^-  fn
       ?-  r
-        %z  (lug %fl a f)  %d  (lug %fl a f)
-        %a  (lug %ce a f)  %u  (lug %ce a f)
-        %n  (lug %ne a f)
+        %z  (lug %fl a t)  %d  (lug %fl a t)
+        %a  (lug %ce a t)  %u  (lug %ce a t)
+        %n  (lug %ne a t)
       ==
     ::
     ++  add
@@ -608,9 +607,9 @@
       ?:  d  (sub [(sum:si e.a e.b) (^^mul a.a a.b)] c |)
       (sub c [(sum:si e.a e.b) (^^mul a.a a.b)] |)
     ::
-    ::  integer square root w/rounding info
+    ::  integer square root w/sticky bit
     ++  itr
-      |=  [a=@]  ^-  [@ ?(%e %d %h %u)]
+      |=  [a=@]  ^-  [@ ?]
       =+  [q=(^^div (dec (xeb a)) 2) r=0]
       =+  ^=  c
         |-  =+  s=(^^add r (bex q))
@@ -618,14 +617,11 @@
         ?:  =(q 0)
           ?:  (^^lte - a)  [s -]  [r (^^mul r r)]
         ?:  (^^lte - a)  $(r s, q (dec q))  $(q (dec q))
-      ?:  =(+.c a)  [-.c %e]
-      =+  v=(^^add (lsh 0 1 -.c) 1)
-      =+  y=(^^mul v v)
-      ?:  (^^lth y (lsh 0 2 a))  [-.c %u]  [-.c %d]
+      [-.c =(+.c a)]
     ::
-    ::  integer inverse square root w/shift amount & rounding info
+    ::  integer inverse square root w/shift amount & sticky bit
     ++  iir
-      |=  [a=@]  ^-  [@ @ ?(%e %d %h %u)]
+      |=  [a=@]  ^-  [@ @ ?]
       =+  [sa=(dec (xeb a))]
       =+  [q=(^^div (xeb a) 2) z=(bex (^^mul sa 2)) r=0]
       =+  ^=  c
@@ -634,12 +630,7 @@
         ?:  =(q 0)
           ?:  (^^lte - z)  [s -]  [r (^^mul a (^^mul r r))]
         ?:  (^^lte - z)  $(r s, q (dec q))  $(q (dec q))
-      ?:  =(+.c z)  [-.c sa %e]
-      =+  v=(^^add (lsh 0 1 -.c) 1)
-      =+  y=(^^mul a (^^mul v v))
-      =+  w=(lsh 0 2 z)
-      ?:  =(y w)  [-.c sa %h]
-      ?:  (^^lth y w)  [-.c sa %u]  [-.c sa %d]
+      [-.c sa =(+.c z)]
     ::
     ++  frd                                             ::  a/2, rounds to -inf
       |=  [a=@s]
@@ -651,7 +642,7 @@
     ++  sqt
       |=  [a=[e=@s a=@u]]  ^-  fn
       =.  a
-        =+  [w=(met 0 a.a) x=(^^mul prc 2)]
+        =+  [w=(met 0 a.a) x=(^^mul +(prc) 2)]
         =+  ?:((^^lth w x) (^^sub x w) 0)
         =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
           (^^add - 1)                                   ::  enforce even exponent
@@ -662,7 +653,7 @@
     ++  isr
       |=  [a=[e=@s a=@u]]  ^-  fn
       =.  a
-        =+  [w=(met 0 a.a) x=(^^mul prc 2)]
+        =+  [w=(met 0 a.a) x=(^^mul +(prc) 2)]
         =+  ?:((^^lth w x) (^^sub x w) 0)
         =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
           (^^add - 1)
@@ -728,23 +719,21 @@
           (min q (^^sub prc (met 0 a.a)))
       a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
     ::
-    ::  required precision for %d, %h, %u
+    ::  required precision if sticky bit
     ++  rpr
       |=  [a=@s]
-      ?.  =((cmp:si a emn) -1)  prc
+      ?:  |(=(den %i) =((cmp:si emn a) -1))  +(prc)
       =+  b=(abs:si (dif:si emn a))
-      ?:  (^^lth b prc)  (^^sub prc b)  1
+      ?:  (^^lte b prc)  (^^add (^^sub prc b) 2)  1
     ::
     ::  in order: floor, ceiling, nearest (even, away from 0, toward 0), larger, smaller
     ++  lag
       |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u]]  ^-  fn
-      (lug t a %e)
+      (lug t a &)
     ::
-    ::  using %e, %d, %h, %u allows us to round numbers without knowing all digits
-    ::  %e: a =  a.a    *2^e.a ||  %d:  a.a    *2^e.a < a < (a.a+.5)*2^e.a
-    ::  %h: a = (a.a+.5)*2^e.a ||  %u: (a.a+.5)*2^e.a < a < (a.a+ 1)*2^e.a
+    ::  t=sticky bit
     ++  lug
-      |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] f=?(%e %d %h %u)]  ^-  fn
+      |=  [t=?(%fl %ce %ne %na %nt %lg %sm) a=[e=@s a=@u] s=?]  ^-  fn
       ::
       =-                                                ::  if !den, flush denormals to zero
         ?.  =(den %f)  -
@@ -752,7 +741,7 @@
         ?:  =((met 0 ->+>) prc)  -  [%f & zer]
       ::
       =+  m=(met 0 a.a)
-      ?>  |(=(f %e) (^gte m (rpr e.a)))                 ::  if not %e, need sufficient precision
+      ?>  |(s (^gte m (rpr e.a)))                       ::  sticky bit requires precision
       =+  ^=  q
         =+  ^=  f                                       ::  reduce precision
           ?:  (^gth m prc)  (^^sub m prc)  0
@@ -768,9 +757,9 @@
         ?-  t
           %fl  [%f & zer]  %sm  [%f & zer]
           %ce  [%f & spd]  %lg  [%f & spd]
-          %ne  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+          %ne  ?:  s  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
                [%f & ?:((^^lth b (bex (dec q))) zer spd)]
-          %nt  ?:  =(f %e)  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
+          %nt  ?:  s  [%f & ?:((^^lte b (bex (dec q))) zer spd)]
                [%f & ?:((^^lth b (bex (dec q))) zer spd)]
           %na  [%f & ?:((^^lth b (bex (dec q))) zer spd)]
         ==
@@ -781,26 +770,23 @@
         ?-  t
           %fl  a
           %lg  a(a +(a.a))
-          %sm  ?.  &(=(b 0) =(f %e))  a
+          %sm  ?.  &(=(b 0) s)  a
                ?:  &(=(e.a emn) !=(den %i))  a(a (dec a.a))
                =+  y=(dec (^^mul a.a 2))
                ?.  (^^lte (met 0 y) prc)  a(a (dec a.a))
                [(dif:si e.a --1) y]
-          %ce  ?:  &(=(b 0) =(f %e))  a  a(a +(a.a))
-          %ne  ?~  b  ?.  =(q 0)  a
-                 ?-  f
-                   %e  a  %d  a  %u  a(a +(a.a))
-                   %h  ?~  (dis a.a 1)  a  a(a +(a.a))
-                 ==
+          %ce  ?:  &(=(b 0) s)  a  a(a +(a.a))
+          %ne  ?~  b  a
                =+  y=(bex (dec q))
-               ?:  &(=(b y) =(f %e))                    ::  halfway rounds to even
+               ?:  &(=(b y) s)                          ::  halfway rounds to even
                  ?~  (dis a.a 1)  a  a(a +(a.a))
                ?:  (^^lth b y)  a  a(a +(a.a))
-          %na  ?~  b  ?.  =(q 0)  a  ?+(f a(a +(a.a)) %e a, %d a)
-               ?:  (^^lth b (bex (dec q)))  a  a(a +(a.a))
-          %nt  ?~  b  ?.  =(q 0)  a  ?+(f a %u a(a +(a.a)))
+          %na  ?~  b  a
                =+  y=(bex (dec q))
-               ?:  =(b y)  ?:  =(f %e)  a  a(a +(a.a))
+               ?:  (^^lth b y)  a  a(a +(a.a))
+          %nt  ?~  b  a
+               =+  y=(bex (dec q))
+               ?:  =(b y)  ?:  s  a  a(a +(a.a))
                ?:  (^^lth b y)  a  a(a +(a.a))
         ==
       ?~  a.a  [%f & zer]
