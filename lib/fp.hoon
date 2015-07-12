@@ -8,7 +8,9 @@
 ::::
 |%
 ++  fl
-  |_  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a) d=?(%d %f %i)]
+  =+  ^-  [[p=@u v=@s w=@u] r=?(%n %u %d %z %a) d=?(%d %f %i)]
+    [[113 -16.494 32.765] %n %d]
+  |%
   ::  p=precision:     number of bits in arithmetic form; must be at least 2
   ::  v=min exponent:  minimum value of e
   ::  w=width:         max - min value of e, 0 is fixed point
@@ -195,7 +197,7 @@
                       rl72h.ui5Jn.pynDX.6Z4N2.WqoTX.mIb~R.OSZ0q.TXuUU.
                       q~Jqy.p-BHF.YA4nN.b7-p9.a6phX.ehrfs.80vby.xoXY5.
                       CdF8d.xNlQV.FF5z-.E~ijf.nUdBn.ifsEW.Sm76b.Ply25
-        (rau:m [-1.198 ap] &)
+        (rau:m [-1.198 ap] |)
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -233,7 +235,7 @@
                       4mCU9.jWmOx.oyiKz.56ILq.4j5Ye.7WVWF.L3Ijp.weOlL.
                       EeNSl.~tbsI.W7IpR.BicHR.TWqZe.30Oi6.lvEos.L8eey.
                       SySnN.gY~Rs.o7ZcE.h-RLX.A64dc.fyfVl.6yXBq.trvMu
-        (rau:m [-1.200 ap] &)
+        (rau:m [-1.200 ap] |)
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -962,6 +964,14 @@
     =+  r=(^add (lsh 0 p (abs:si q)) (end 0 p a.a))
     ?:  s.a  r  (^add r sb)
   ::
+  ++  sig
+    |=  [a=@r]  ^-  ?
+    =(0 (cut 0 [(^add p w) 1] a))
+  ::
+  ++  exp
+    |=  [a=@r]  ^-  @s
+    (dif:si (sun:si (cut 0 [p w] a)) b)
+  ::
   ++  add  |=  [a=@r b=@r]  (bif (add:pa (sea a) (sea b)))
   ++  sub  |=  [a=@r b=@r]  (bif (sub:pa (sea a) (sea b)))
   ++  mul  |=  [a=@r b=@r]  (bif (mul:pa (sea a) (sea b)))
@@ -969,16 +979,24 @@
   ++  fma  |=  [a=@r b=@r c=@r]  (bif (fma:pa (sea a) (sea b) (sea c)))
   ++  sqt  |=  [a=@r]  (bif (sqt:pa (sea a)))
   ++  sun  |=  [a=@u]  (bit [%f & --0 a])
+  ++  san  |=  [a=@s]  (bit [%f (syn:si a) --0 (abs:si a)])
   ++  lth  |=  [a=@r b=@r]  (lth:pa (sea a) (sea b))
   ++  lte  |=  [a=@r b=@r]  (lte:pa (sea a) (sea b))
   ++  equ  |=  [a=@r b=@r]  (equ:pa (sea a) (sea b))
   ++  gte  |=  [a=@r b=@r]  (gte:pa (sea a) (sea b))
   ++  gth  |=  [a=@r b=@r]  (gth:pa (sea a) (sea b))
+  ++  drg  |=  [a=@r]  (drg:pa (sea a))
+  ++  grd  |=  [a=dn]  (bif (grd:pa a))
   --
 ::
-++  rh  =>  ff  .(w 5, p 10, b --15, f %.n, r %n)
-++  rs  =>  ff  .(w 8, p 23, b --127, f %.n, r %n)
-++  rq  =>  ff  .(w 15, p 112, b --16.383, f %.n, r %n)
+++  rlyd  |=  a=@rd  ^-  dn  (drg:rd a)
+++  rlys  |=  a=@rs  ^-  dn  (drg:rs a)
+++  rlyh  |=  a=@rh  ^-  dn  (drg:rh a)
+++  rlyq  |=  a=@rq  ^-  dn  (drg:rq a)
+++  ryld  |=  a=dn  ^-  @rd  (grd:rd a)
+++  ryls  |=  a=dn  ^-  @rs  (grd:rs a)
+++  rylh  |=  a=dn  ^-  @rh  (grd:rh a)
+++  rylq  |=  a=dn  ^-  @rq  (grd:rq a)
 ::
 ++  rd
   =+  ma==>(ff .(w 11, p 52, b --1.023, f %.n, r %n))
@@ -987,6 +1005,10 @@
     |=  [a=@rd]  (sea:ma a)
   ++  bit
     |=  [a=fn]  ^-  @rd  (bit:ma a)
+  ++  sig
+    |=  [a=@rd]  (sig:ma a)
+  ++  exp
+    |=  [a=@rd]  (exp:ma a)
   ++  add
     |=  [a=@rd b=@rd]  ^-  @rd  (add:ma a b)
   ++  sub
@@ -1001,6 +1023,8 @@
     |=  [a=@rd]  ^-  @rd  (sqt:ma a)
   ++  sun
     |=  [a=@u]  ^-  @rd  (sun:ma a)
+  ++  san
+    |=  [a=@s]  ^-  @rd  (san:ma a)
   ++  lth
     |=  [a=@rd b=@rd]  (lth:ma a b)
   ++  lte
@@ -1011,5 +1035,138 @@
     |=  [a=@rd b=@rd]  (gte:ma a b)
   ++  gth
     |=  [a=@rd b=@rd]  (gth:ma a b)
+  ++  drg
+    |=  [a=@rd]  (drg:ma a)
+  ++  grd
+    |=  [a=dn]  (grd:ma a)
+  --
+::
+++  rs
+  =+  ma==>(ff .(w 8, p 23, b --127, f %.n, r %n))
+  |%
+  ++  sea
+    |=  [a=@rs]  (sea:ma a)
+  ++  bit
+    |=  [a=fn]  ^-  @rs  (bit:ma a)
+  ++  sig
+    |=  [a=@rs]  (sig:ma a)
+  ++  exp
+    |=  [a=@rs]  (exp:ma a)
+  ++  add
+    |=  [a=@rs b=@rs]  ^-  @rs  (add:ma a b)
+  ++  sub
+    |=  [a=@rs b=@rs]  ^-  @rs  (sub:ma a b)
+  ++  mul
+    |=  [a=@rs b=@rs]  ^-  @rs  (mul:ma a b)
+  ++  div
+    |=  [a=@rs b=@rs]  ^-  @rs  (div:ma a b)
+  ++  fma
+    |=  [a=@rs b=@rs c=@rs]  ^-  @rs  (fma:ma a b c)
+  ++  sqt
+    |=  [a=@rs]  ^-  @rs  (sqt:ma a)
+  ++  sun
+    |=  [a=@u]  ^-  @rs  (sun:ma a)
+  ++  san
+    |=  [a=@s]  ^-  @rs  (san:ma a)
+  ++  lth
+    |=  [a=@rs b=@rs]  (lth:ma a b)
+  ++  lte
+    |=  [a=@rs b=@rs]  (lte:ma a b)
+  ++  equ
+    |=  [a=@rs b=@rs]  (equ:ma a b)
+  ++  gte
+    |=  [a=@rs b=@rs]  (gte:ma a b)
+  ++  gth
+    |=  [a=@rs b=@rs]  (gth:ma a b)
+  ++  drg
+    |=  [a=@rs]  (drg:ma a)
+  ++  grd
+    |=  [a=dn]  (grd:ma a)
+  --
+::
+++  rh
+  =+  ma==>(ff .(w 5, p 10, b --15, f %.n, r %n))
+  |%
+  ++  sea
+    |=  [a=@rh]  (sea:ma a)
+  ++  bit
+    |=  [a=fn]  ^-  @rh  (bit:ma a)
+  ++  sig
+    |=  [a=@rh]  (sig:ma a)
+  ++  exp
+    |=  [a=@rh]  (exp:ma a)
+  ++  add
+    |=  [a=@rh b=@rh]  ^-  @rh  (add:ma a b)
+  ++  sub
+    |=  [a=@rh b=@rh]  ^-  @rh  (sub:ma a b)
+  ++  mul
+    |=  [a=@rh b=@rh]  ^-  @rh  (mul:ma a b)
+  ++  div
+    |=  [a=@rh b=@rh]  ^-  @rh  (div:ma a b)
+  ++  fma
+    |=  [a=@rh b=@rh c=@rh]  ^-  @rh  (fma:ma a b c)
+  ++  sqt
+    |=  [a=@rh]  ^-  @rh  (sqt:ma a)
+  ++  sun
+    |=  [a=@u]  ^-  @rh  (sun:ma a)
+  ++  san
+    |=  [a=@s]  ^-  @rh  (san:ma a)
+  ++  lth
+    |=  [a=@rh b=@rh]  (lth:ma a b)
+  ++  lte
+    |=  [a=@rh b=@rh]  (lte:ma a b)
+  ++  equ
+    |=  [a=@rh b=@rh]  (equ:ma a b)
+  ++  gte
+    |=  [a=@rh b=@rh]  (gte:ma a b)
+  ++  gth
+    |=  [a=@rh b=@rh]  (gth:ma a b)
+  ++  drg
+    |=  [a=@rh]  (drg:ma a)
+  ++  grd
+    |=  [a=dn]  (grd:ma a)
+  --
+::
+++  rq
+  =+  ma==>(ff .(w 15, p 112, b --16.383, f %.n, r %n))
+  |%
+  ++  sea
+    |=  [a=@rq]  (sea:ma a)
+  ++  bit
+    |=  [a=fn]  ^-  @rq  (bit:ma a)
+  ++  sig
+    |=  [a=@rq]  (sig:ma a)
+  ++  exp
+    |=  [a=@rq]  (exp:ma a)
+  ++  add
+    |=  [a=@rq b=@rq]  ^-  @rq  (add:ma a b)
+  ++  sub
+    |=  [a=@rq b=@rq]  ^-  @rq  (sub:ma a b)
+  ++  mul
+    |=  [a=@rq b=@rq]  ^-  @rq  (mul:ma a b)
+  ++  div
+    |=  [a=@rq b=@rq]  ^-  @rq  (div:ma a b)
+  ++  fma
+    |=  [a=@rq b=@rq c=@rq]  ^-  @rq  (fma:ma a b c)
+  ++  sqt
+    |=  [a=@rq]  ^-  @rq  (sqt:ma a)
+  ++  sun
+    |=  [a=@u]  ^-  @rq  (sun:ma a)
+  ++  san
+    |=  [a=@s]  ^-  @rq  (san:ma a)
+  ++  lth
+    |=  [a=@rq b=@rq]  (lth:ma a b)
+  ++  lte
+    |=  [a=@rq b=@rq]  (lte:ma a b)
+  ++  equ
+    |=  [a=@rq b=@rq]  (equ:ma a b)
+  ++  gte
+    |=  [a=@rq b=@rq]  (gte:ma a b)
+  ++  gth
+    |=  [a=@rq b=@rq]  (gth:ma a b)
+  ++  drg
+    |=  [a=@rq]  (drg:ma a)
+  ++  grd
+    |=  [a=dn]  (grd:ma a)
   --
 --
