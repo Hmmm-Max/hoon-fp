@@ -43,6 +43,10 @@
     ?:  |(=(a.a 0) =(a.b 0))
       ?.  &(=(a.a 0) =(a.b 0))  %-  rou  ?~(a.a b a)
       [%f ?:(=(r %d) &(s.a s.b) |(s.a s.b)) zer:m]
+    %-  |=  [a=fn]
+        ?.  ?=([%f *] a)  a
+        ?.  =(a.a 0)  a
+        [%f !=(r %d) zer:m]
     ?:  =(s.a s.b)
       ?:  s.a  (add:m +>.a +>.b |)
       =.(r swr:m (fli (add:m +>.a +>.b |)))
@@ -182,6 +186,7 @@
     |=  [a=dn]  ^-  fn
     ?:  ?=([%n *] a)  [%n ~]
     ?:  ?=([%i *] a)  [%i s.a]
+    =>  .(r %n)                                         ::  always rnd nearest
     =+  q=(abs:si e.a)
     ?:  (syn:si e.a)
       (mul [%f s.a --0 a.a] [%f & e.a (pow:m 5 q)])
@@ -929,9 +934,8 @@
   ++  sb  (bex (^add w p))
   ::
   ++  pa
-    =+  i=(dif:si --1 b)
-    =+  q=fl
-    q(p +(p), v i, w (^sub (bex w) 3), d ?:(f %f %d), r r)
+    =+  i=(dif:si (dif:si --1 b) (sun:si p))
+    %*(. fl p +(p), v i, w (^sub (bex w) 3), d ?:(f %f %d), r r)
   ::
   ++  sea
     |=  [a=@r]  ^-  fn
