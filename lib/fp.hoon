@@ -197,6 +197,7 @@
     ++  pi
       =+  np=prc:m
       |.  ^-  fn
+      ?>  (^gth np 1)
       =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wOg~qE.y5EMz.j4NCa.bwdMs.QiA2j.wyapY.NQ0wK.-FzIj.
@@ -236,6 +237,7 @@
     ++  log2                                            ::  natural logarithm of 2
       =+  np=prc:m
       |.  ^-  fn
+      ?>  (^gth np 1)
       =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wIn8nZ.Z7fuq.L9UXe.o0~bS.HQ3Pg.OpOCb.oJywQ.nmUKG.
@@ -390,6 +392,7 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  [%i &]
+      ?~  a.a  (rou [%f & --0 1])
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -411,6 +414,7 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  a
+      ?~  a.a  [%f & zer:m]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -425,14 +429,35 @@
       =+  u=(ned:m =>(.(r %d) (exp a)))
       =+  v==>(.(r %u) (inv u))
       =+  w=(ned:m (sub u v))
-      ?:  =(a.w 0) [w [%f & --0 1]]                     ::  XX intentionally fail, hacky
-      =+  q=(add (abs:si (dif:si e.u e.w)) 2)
+      ?:  =(a.w 0)  [w [%f & --0 1]]                    ::  XX intentionally fail, hacky
+      =+  q=(^add (abs:si (dif:si e.u e.w)) 2)
       =+  s=(ned:m (shf:m w -1))
       [s [%f & e.s (^add (bex q) 1)]]
     ::
     ++  tanh
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  (rou [%f s.a --0 1])
+      ?~  a.a  [%f & zer:m]
+      |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  v=(ned:m (exp (shf:m a --1)))
+      =+  w==>(.(r %d) (ned:m (add v [%f & --0 1])))
+      =+  r==>(.(r %u) (ned:m (sub v [%f & --0 1])))
+      =+  q=(abs:si (dif:si e.v e.r))
+      =+  j=(sun:si (max 4 (^add q 2)))
+      :-  (div r w)
+      [%f & (dif:si j (sun:si prc:m)) 1]
     ::
     ++  acosh
       |=  [a=fn]  ^-  fn
