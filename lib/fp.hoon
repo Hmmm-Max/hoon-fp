@@ -388,11 +388,47 @@
     ::
     ++  cosh
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  [%i &]
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  u==>(.(r %d) (exp a))
+      =+  v==>(.(r %u) (inv u))
+      =+  w=(add u v)
+      =+  s=(ned:m (shf:m w -1))
+      [s [%f & e.s 5]]
     ::
     ++  sinh
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  a
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  u=(ned:m =>(.(r %d) (exp a)))
+      =+  v==>(.(r %u) (inv u))
+      =+  w=(ned:m (sub u v))
+      ?:  =(a.w 0) [w [%f & --0 1]]                     ::  XX intentionally fail, hacky
+      =+  q=(add (abs:si (dif:si e.u e.w)) 2)
+      =+  s=(ned:m (shf:m w -1))
+      [s [%f & e.s (^add (bex q) 1)]]
     ::
     ++  tanh
       |=  [a=fn]  ^-  fn
@@ -434,12 +470,12 @@
       ^=  q  ^-  [fn fn]
       =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]
       |-
-      ~&  "l: {<l>} | c: {<c>} | f: {<f>}"
+      ::~&  "l: {<l>} | c: {<c>} | f: {<f>}"
       =+  g=(div d [%f & --0 f])
       =.  f  (^mul f l)
       =+  q=(ned:m =>(.(r %a) (div d (rou [%f & --0 f]))))
       =.  d  =>(.(r %a) (mul d p.b))
-      ~&  "(ibl:m +>.q): {<(ibl:m +>.q)>} | c: {<c>}"
+      ::~&  "(ibl:m +>.q): {<(ibl:m +>.q)>} | c: {<c>}"
       ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))
         [c [%f & (sum:si e.c (sun:si (^add l 4))) 1]]   ::  XX need to check this thoroughly
       =.  c  (ned:m (add c q))
