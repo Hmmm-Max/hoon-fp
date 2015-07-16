@@ -230,7 +230,7 @@
       ?:  (need (gth (abs e) [%f & f 1]))
         $(k +(k))
       =+  ^=  g
-        (dif:si (sun:si (^add (^mul k 2) 8)) (sun:si p))
+        (dif:si (sun:si (^add (^mul k 2) 10)) (sun:si p))
       [(div b d) [%f & g 1]]
     ::
     ++  log2                                            ::  natural logarithm of 2
@@ -416,7 +416,7 @@
       ?:  ?=([%i *] a)  ?:(s.a [%i &] [%f & zer:m])
       ?~  a.a  (rou [%f & --0 1])
       =-
-        =+  wp=(^add prc:m 16)
+        =+  wp=(^add (^mul prc:m 2) 8)
         =+  nc=16
         |-
         ?:  (^gth wp mxp:m)
@@ -426,7 +426,24 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      !!
+      =+  ^=  b
+        ?:  =((cmp:si (ibl:m +>.a) --0) -1)  [p=a q=--0]
+        =>(.(r %a) (ran a log2:c |))
+      =-
+        [(shf:m -.q q.b) (shf:m +.q q.b)]
+      ^=  q  ^-  [fn fn]
+      =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]
+      |-
+      ~&  "l: {<l>} | c: {<c>} | f: {<f>}"
+      =+  g=(div d [%f & --0 f])
+      =.  f  (^mul f l)
+      =+  q=(ned:m =>(.(r %a) (div d (rou [%f & --0 f]))))
+      =.  d  =>(.(r %a) (mul d p.b))
+      ~&  "(ibl:m +>.q): {<(ibl:m +>.q)>} | c: {<c>}"
+      ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))
+        [c [%f & (sum:si e.c (sun:si (^add l 4))) 1]]   ::  XX need to check this thoroughly
+      =.  c  (ned:m (add c q))
+      $(l +(l))
     ::
     ++  log
       |=  [a=fn]  ^-  fn
@@ -528,13 +545,13 @@
       $(v nv, u (ned:m (sqt (mul u v))), n +(n))
     ::
     ++  ran                                             ::  range reduction, p=a-qb
-      |=  [a=fn b=$+(@ fn) c=?]  ^-  [p=fn q=@u]        ::  b: accepts precision & produces const
-      ?.  ?=([%f *] a)  [[%n ~] 0]                      ::  c: congruence modulo (|p| < b/2)
-      ?~  a.a  [[%f & zer:m] 0]
-      |-  ^-  [p=fn q=@u]  ?.  s.a
+      |=  [a=fn b=$+(@ fn) c=?]  ^-  [p=fn q=@s]        ::  b: accepts precision & produces const
+      ?.  ?=([%f *] a)  [[%n ~] --0]                    ::  c: congruence modulo (|p| < b/2)
+      ?~  a.a  [[%f & zer:m] --0]
+      |-  ^-  [p=fn q=@s]  ?.  s.a
         =.  r  swr:m
         =+  q=$(s.a &)
-        [(fli -.q) +.q]
+        [(fli -.q) (new:si !(syn:si +.q) (abs:si +.q))]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -544,7 +561,7 @@
         =+  y=(ka(r %n, p wp, d %i))
         =+  x=(bnd:m -<.y +.y)
         ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
-        [+.x ->.y]
+        [+.x (sun:si ->.y)]
       ::
       ^=  ka  |.  ^-  [[fn @u] fn]
       =+  b=(ned:m (b prc:m))
