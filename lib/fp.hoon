@@ -636,13 +636,40 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
+      =+  u==>(.(r %u) (log a))
       =+  q==>(.(r %d) (log2:c))
-      =+  z=(ned:m (div (log a) q))
+      =+  z=(ned:m (div u q))
       :-  z  [%f & e.z 5]
     ::
     ++  log10
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  ?:(s.a [%i &] [%n ~])
+      ?~  a.a  [%i |]  ?.  s.a  [%n ~]
+      =+  q=(ibl:m +>.a)
+      =+  ^=  et  ^-  (unit fn)                         ::  exact test
+        ?:  =((cmp:si q --0) -1)  ~
+        =+  f=(uni:m +>.a)
+        ?:  =((cmp:si e.f --0) -1)  ~
+        =+  j=(abs:si e.f)
+        ?.  =((pow:m 5 j) a.f)  ~
+        [~ (rou [%f & --0 j])]
+      ?.  ?=(~ et)  (need et)
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  u==>(.(r %u) (log a))
+      =+  q==>(.(r %d) (log [%f & --0 10]))
+      =+  z=(ned:m (div u q))
+      :-  z  [%f & e.z 5]
     ::
     ++  pow
       |=  [a=fn b=fn]  ^-  fn
