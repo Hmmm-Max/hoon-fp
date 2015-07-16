@@ -414,7 +414,7 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  a
-      ?~  a.a  [%f & zer:m]
+      ?~  a.a  [%f s.a zer:m]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -461,15 +461,98 @@
     ::
     ++  acosh
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  ?:(s.a [%i &] [%n ~])
+      ?:  (need (lte a [%f & --0 1]))
+        ?:  (need (equ a [%f & --0 1]))
+            [%f & zer:m]  [%n ~]
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  q=(ned:m =>(.(r %d) (mul a a)))
+      =+  j=(ned:m =>(.(r %d) (sub q [%f & --0 1])))
+      ?:  =(a.j 0)
+        =+  q=(ned:m =>(.(r %d) (sub a [%f & --0 1])))
+        =+  r=(shf:m q --1)
+        =+  s=(ned:m (sqt r))
+        [s [%f & e.s 2]]
+      =+  d=(abs:si (dif:si e.q e.j))
+      =+  s=(sqt j)
+      =+  t=(add s a)
+      =+  u=(ned:m (log t))
+      =+  w=(dif:si (sun:si (^add 4 (max 1 d))) (ibl:m +>.u))
+      =+  x=(^add (bex (abs:si w)) 1)
+      [u [%f & e.u x]]
     ::
     ++  asinh
       |=  [a=fn]  ^-  fn
-      !!
+      ?:  ?=([%n *] a)  [%n ~]
+      ?:  ?=([%i *] a)  a
+      ?:  =(a.a 0)  [%f s.a zer:m]
+      |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  s==>(.(r %d) (mul a a))
+      =+  t==>(.(r %d) (add s [%f & --0 1]))
+      =+  u=(sqt t)
+      =+  v=(add u a)
+      =+  w=(ned:m (log v))
+      =+  q=(ibl:m +>.w)
+      =+  ^=  j
+        ?.  =((cmp:si --4 q) --1)  --1
+        (dif:si --4 q)
+      [w [%f & (sum:si e.w j) 1]]
     ::
     ++  atanh
       |=  [a=fn]  ^-  fn
-      !!
+      ?.  ?=([%f *] a)  [%n ~]
+      ?:  =(a.a 0)  [%f s.a zer:m]
+      |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
+      =+  z=(ibl:m +>.a)
+      ?.  =((cmp:si z --0) -1)
+        ?:  (need (equ a [%f & --0 1]))
+            [%i &]  [%n ~]
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  s=(ned:m =>(.(r %u) (add [%f & --0 1] a)))
+      =+  t=(ned:m =>(.(r %d) (sub [%f & --0 1] a)))
+      =+  u=(ned:m (div s t))
+      =+  v=(ned:m (log u))
+      =+  w=(ned:m (shf:m v -1))
+      =+  [iv=(ibl:m +>.v) it=(ibl:m +>.t) ia=(ibl:m +>.a)]
+      =+  ^=  q
+        ?:  =((cmp:si --4 iv) --1)  (dif:si --4 iv)  --0
+      =+  ^=  i
+        (sum:si (dif:si ia (sum:si it iv)) --2)
+      =+  ^=  j  ?:  (syn:si i)  i  --0
+      =+  k=(^add 1 (^add (bex (abs:si q)) (bex (abs:si j))))
+      [w [%f & e.w k]]
     ::
     ++  exp
       |=  [a=fn]  ^-  fn
@@ -495,12 +578,10 @@
       ^=  q  ^-  [fn fn]
       =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]
       |-
-      ::~&  "l: {<l>} | c: {<c>} | f: {<f>}"
       =+  g=(div d [%f & --0 f])
       =.  f  (^mul f l)
       =+  q=(ned:m =>(.(r %a) (div d (rou [%f & --0 f]))))
       =.  d  =>(.(r %a) (mul d p.b))
-      ::~&  "(ibl:m +>.q): {<(ibl:m +>.q)>} | c: {<c>}"
       ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))
         [c [%f & (sum:si e.c (sun:si (^add l 4))) 1]]   ::  XX need to check this thoroughly
       =.  c  (ned:m (add c q))
