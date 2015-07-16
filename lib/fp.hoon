@@ -195,7 +195,9 @@
   ++  c                                                 ::  mathematical constants
     |%
     ++  pi
-      ~+  |-  ^-  fn
+      =+  np=prc:m
+      |.  ^-  fn
+      =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wOg~qE.y5EMz.j4NCa.bwdMs.QiA2j.wyapY.NQ0wK.-FzIj.
                       CO9hi.wxVzz.g4Tu-.l6rfd.eAcrc.2Iarv.9v53t.fUjlJ.
@@ -233,7 +235,9 @@
       [(div b d) [%f & g 1]]
     ::
     ++  log2                                            ::  natural logarithm of 2
-      ~+  |-  ^-  fn
+      =+  np=prc:m
+      |.  ^-  fn
+      =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wIn8nZ.Z7fuq.L9UXe.o0~bS.HQ3Pg.OpOCb.oJywQ.nmUKG.
                       -yLDK.7owru.KIC5m.lkLJa.-xIgX.iWKds.4U8kg.DlPIF.
@@ -295,8 +299,7 @@
         =+  q=(ibl:m +>.a)
         ?:  =((cmp:si q --1) -1)  a
         =+  ^=  pi
-          =>  .(^p (^add ^p (abs:si q)))
-          (shf:m pi:c --1)
+          (shf:m (pi:c (^add ^p (abs:si q))) --1)
         (ned:m (rem:m a pi))
       =+  k=-:(itr:m (^div n 2))
       =+  ^=  i  %+  shf:m  =>(.(r %u) (mul a a))
@@ -346,8 +349,7 @@
         =+  q=(ibl:m +>.a)
         ?:  =((cmp:si q --1) -1)  a
         =+  ^=  pi
-          =>  .(^p (^add ^p (abs:si q)))
-          (shf:m pi:c --1)
+          (shf:m (pi:c (^add ^p (abs:si q))) --1)
         (ned:m (rem:m a pi))
       =+  c==>(.(r %a) (cos a))
       =+  t==>(.(r %a) (mul c c))
@@ -456,9 +458,9 @@
       =.  a  (ned:m (shf:m a n))
       =.  a  (ned:m (agm [%f & --0 1] (div [%f & --0 4] a)))
       =.  a  (ned:m (shf:m a --1))
-      =.  a  (ned:m (div pi:c a))
+      =.  a  (ned:m (div (pi:c) a))
       =+  j=(old:si n)
-      =+  q=(mul [%f -.j --0 +.j] log2:c)
+      =+  q=(mul [%f -.j --0 +.j] (log2:c))
       =+  b=(ned:m (sub a q))
       =+  e=(dif:si (ibl:m +>.a) (ibl:m +>.b))
       :-  b  [%f & (sum:si e.b e) 11]
@@ -483,7 +485,7 @@
       ::
       ^=  ka  |=  [p=@]  ^-  [fn fn]
       =>  .(r %n, ^p p, d %i)
-      =+  q==>(.(r %d) log2:c)
+      =+  q==>(.(r %d) (log2:c))
       =+  z=(ned:m (div (log a) q))
       :-  z  [%f & e.z 5]
     ::
@@ -533,6 +535,48 @@
         =+  q=(ned:m (add u v))
         q(e (dif:si e.q --1))
       $(v nv, u (ned:m (sqt (mul u v))), n +(n))
+    ::
+    ++  ran                                             ::  range reduction, p=a-qb
+      |=  [a=fn b=$+(@ fn) c=?]  ^-  [p=fn q=@u]        ::  b: accepts precision & produces const
+      ?.  ?=([%f *] a)  [[%n ~] 0]                      ::  c: congruence modulo (|p| < b/2)
+      ?~  a.a  [[%f & zer:m] 0]
+      |-  ^-  [p=fn q=@u]  ?.  s.a
+        =.  r  swr:m
+        =+  q=$(s.a &)
+        [(fli -.q) +.q]
+      =-
+        =+  wp=(^add prc:m 16)
+        =+  nc=16
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  y=(ka wp)
+        =+  x=(bnd:m -<.y +.y)
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        [+.x ->.y]
+      ::
+      ^=  ka  |=  [p=@]  ^-  [[fn @u] fn]
+      =>  .(r %n, ^p p, d %i)
+      =+  b=(ned:m (b ^p))
+      =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
+      =+  ^=  q
+        ?.  =((cmp:si e.a e.b) -1)  --0
+        (dif:si e.b e.a)
+      =+  al=a(a (end 0 (abs:si q) a.a))
+      =+  ah=a(a (rsh 0 (abs:si q) a.a), e (sum:si e.a q))
+      =+  w=(abs:si (dif:si e.ah e.b))
+      =+  z=(mod (bex w) a.b)
+      =+  ^=  x  ^-  [[? @u] @u]
+        ?:  c
+          =+  q=(cmd:m (^mul a.ah z) a.b)
+          [(old:si -.q) +.q]
+        =+  q=(dod:m (^mul a.ah z) a.b)
+        [[& -.q] +.q]
+      :_  [%f & e.b +(+.x)]  :_  +.x
+      =+  r=`fn`[%f -<.x e.b ->.x]
+      ?:  |((need (lth r b(e (dif:si e.b --1)))) =(a.al 0))
+        (add r al)
+      (sub al r)
     --
   ::
   ++  m                                                 ::  internal functions, constants
@@ -869,15 +913,20 @@
       ?:  ?=([%f *] a)  a
       ~|  %need-float  !!
     ::
+    ++  dod
+      |=  [a=@u b=@u]  ^-  [@u @u]
+      [(mod a b) (^^div a b)]
+    ::
     ++  cmd
-      |=  [a=@u b=@u]  ^-  @s
+      |=  [a=@u b=@u]  ^-  [@s @u]
       =+  c=(^^div a b)
       =+  d=(mod a b)
       =+  e=(^^mul d 2)
       =+  ^=  f
         ?:  (^^lth e b)  c
         ?.  =(e b)  +(c)
-        ?~((end 0 1 c) c +(c))
+        ?~  (end 0 1 c)  c  +(c)
+      :_  f
       (dif:si (sun:si a) (sun:si (^^mul b f)))
     ::
     ++  rem
@@ -895,7 +944,7 @@
       =+  ah=a(a (rsh 0 (abs:si q) a.a), e (sum:si e.a q))
       =+  w=(abs:si (dif:si e.ah e.b))
       =+  z=(mod (bex w) a.b)
-      =+  x=(old:si (cmd:m (^^mul a.ah z) a.b))
+      =+  x=(old:si -:(cmd:m (^^mul a.ah z) a.b))
       =+  r=`fn`[%f -.x e.b +.x]
       ?:  |((need (^lth r b(e (dif:si e.b --1)))) =(a.al 0))
         (^add r al)
