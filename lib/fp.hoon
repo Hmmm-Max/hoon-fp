@@ -673,7 +673,75 @@
     ::
     ++  pow
       |=  [a=fn b=fn]  ^-  fn
-      !!
+      ?:  (fall (equ a [%f & --0 1]) |)  (rou [%f & --0 1])
+      ?:  (fall (equ b [%f & --0 0]) |)  (rou [%f & --0 1])
+      ?:  |(?=([%n *] a) ?=([%n *] b))  [%n ~]
+      ?:  ?=([%i *] b)
+        ?:  (need (equ a [%f | --0 1]))  (rou [%f & --0 1])
+        ?:  =(s.b (need (lth (abs a) [%f & --0 1])))
+            [%f & zer:m]  [%i &]
+      ?:  ?=([%i *] a)
+        ?:  s.a
+          ?:  (need (lth b [%f & zer:m]))
+              [%f & zer:m]  [%i &]
+        ?:  =(%o (noe:m +>.b))
+          ?:  (need (lth b [%f & zer:m]))
+              [%f | zer:m]  [%i |]
+        ?:  (need (lth b [%f & zer:m]))
+            [%f & zer:m]  [%i &]
+      ?~  a.a
+        ?:  =(%o (noe:m +>.b))
+          ?:  (need (lth b [%f & zer:m]))
+              [%i s.a]  [%f s.a zer:m]
+        ?:  (need (lth b [%f & zer:m]))
+            [%i &]  [%f & zer:m]
+      |-  ?:  (need (lth a [%f & zer:m]))
+        ?-  (noe:m +>.b)
+          %n  [%n ~]
+          %e  $(s.a &)
+          %o  (fli =.(r swr:m $(s.a &)))
+        ==
+      ::
+      ::  quick overflow/underflow tests
+      ::  x<2^lo rounds to zero, x>2^hi rounds to inf
+      ::  if b>0, 2^ya <= |a^b| < 2^yb, if b<0, 2^yb < |a^b| <= 2^ya
+      =+  ^=  te  ^-  (unit fn)
+        ?:  =(den:m %i)  ~
+        =+  ia=(ibl:m +>.a)
+        =+  ya=(emu [%f (syn:si ia) --0 (abs:si ia)] b)
+        =+  yb=(emu [%f (syn:si ia) --0 (abs:si (sum:si ia --1))] b)
+        =+  hi=`fn`[%f (syn:si lfe:m) --0 (abs:si lfe:m)]
+        =+  lo=`fn`[%f (syn:si emn:m) -1 (abs:si emn:m)]
+        ?:  (need (lth b [%f & zer:m]))
+          ?:  (need (lth ya lo))  [~ [%f & zer:m]]
+          ?:  (need (gth yb hi))  [~ [%i &]]  ~
+        ?:  (need (lth yb lo))  [~ [%f & zer:m]]
+        ?:  (need (gth ya hi))  [~ [%i &]]  ~
+      ?.  ?=(~ te)  (need te)
+      ::
+      =+  ^=  et  ^-  (unit fn)                         ::  exact test
+        ?:  (need (lth b [%f & zer:m]))
+          ~
+        ~
+      ?.  ?=(~ et)  (need et)
+      ::
+      =-
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  x=(bnd:m (ka(r %n, p wp, d %i)))
+        ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
+        +.x
+      ::
+      ^=  ka  |.  ^-  [fn fn]
+      =+  u=(ned:m (log a))
+      =+  v=(ned:m =>(.(r %u) (mul b u)))
+      =+  w=(ned:m (exp v))
+      =+  z=(sum:si (ibl:m +>.v) --4)
+      =+  q=?:((syn:si z) (abs:si z) 0)
+      :-  w  [%f & e.w (^add (bex q) 1)]
     ::
     ++  agm                                             ::  arithmetic-geometric mean
       |=  [a=fn b=fn]  ^-  fn
@@ -1139,6 +1207,12 @@
       =+  c=(ned (ead a (fli b)))
       ?~  a.c  ~  :-  ~  (dif:si (ibl +>.a) (ibl +>.b))
     ::
+    ++  noe                                             ::  odd int./even int./neither test
+      |=  [a=[e=@s a=@u]]  ^-  ?(%n %o %e)
+      =.  a  (uni a)
+      ?:  =(e.a --0)  %o
+      ?:  =((cmp:si e.a --0) -1)  %n  %e
+    ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
     ++  mxp  20.000                                     ::  max precision for some stuff
@@ -1149,6 +1223,7 @@
     ++  spd  [emn 1]                                    ::  smallest "denormal"
     ++  spn  [emn (bex (dec prc))]                      ::  smallest "normal"
     ++  lfn  [emx (fil 0 prc 1)]                        ::  largest
+    ++  lfe  (sum:si emx (sun:si prc))                  ::  2^lfe is larger than all floats
     ++  zer  [--0 0]                                    ::  zero
     --
   --
