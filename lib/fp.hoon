@@ -497,6 +497,7 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  [%i &]
       ?~  a.a  (rou [%f & --0 1])
+      ?:  &(!=(d %i) (gth (abs a) [%f & (sum:si emx --2) 1]))  [%i &]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -519,6 +520,7 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  a
       ?~  a.a  [%f s.a zer:m]
+      ?:  &(!=(d %i) (gth (abs a) [%f & (sum:si emx --2) 1]))  [%i s.a]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -663,6 +665,8 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  ?:(s.a [%i &] [%f & zer:m])
       ?~  a.a  (rou [%f & --0 1])
+      ?:  &(!=(d %i) (lth a [%f & (sum:si emn -1) 1]))  [%f & zer:m]
+      ?:  &(!=(d %i) (gth a [%f & (sum:si emx --1) 1]))  [%i &]
       =-
         =+  wp=(^add (^mul prc:m 2) 8)
         =+  nc=16
