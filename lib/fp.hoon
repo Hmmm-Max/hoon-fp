@@ -194,7 +194,6 @@
     ++  pi
       =+  np=prc:m
       |.  ^-  fn
-      ?>  (^gth np 1)
       =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wOg~qE.y5EMz.j4NCa.bwdMs.QiA2j.wyapY.NQ0wK.-FzIj.
@@ -204,8 +203,8 @@
                       CdF8d.xNlQV.FF5z-.E~ijf.nUdBn.ifsEW.Sm76b.Ply25
         (rau:m [-1.198 ap] |)
       =-
-        =+  wp=(^add prc:m 16)
-        =+  nc=16
+        =+  wp=(^add prc:m 6)
+        =+  nc=6
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -214,27 +213,14 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      =+  [a=`fn`[%f & --0 1] b=`fn`[%f & -1 1]]
-      =+  [d=`fn`[%f & -2 1] la=a k=0]
-      |-
-      =+  s=(shf:m (add a b) -2)
-      =+  lb=(sqt b)
-      =.  la  (shf:m (add la lb) -1)
-      =.  a  (mul la la)
-      =.  b  (shf:m (sub a s) --1)
-      =+  e=(ned:m (ead a (fli b)))
-      =.  d  (sub d e(e (sum:si e.e (sun:si k))))
-      =+  f=(dif:si (sun:si k) (sun:si p))
-      ?:  (need (gth (abs e) [%f & f 1]))
-        $(k +(k))
-      =+  ^=  g
-        (dif:si (sun:si (^add (^mul k 2) 10)) (sun:si p))
-      [(div b d) [%f & g 1]]
+      =+  [a=(inv [%f & --0 5]) b=(inv [%f & --0 239])] ::  0.5 ulp
+      =+  [c=(shf:m (atan:e a) --2) d=(atan:e b)]       ::  1 ulp
+      =+  [e=(ned:m (shf:m (sub c d) --2))]             ::  3 ulp (no cancellation)
+      [e [%f & e.e 3]]
     ::
     ++  log2                                            ::  natural logarithm of 2
       =+  np=prc:m
       |.  ^-  fn
-      ?>  (^gth np 1)
       =>  .(p np)
       ?:  (^lth prc:m 1.200)
         =+  ^=  ap  0wIn8nZ.Z7fuq.L9UXe.o0~bS.HQ3Pg.OpOCb.oJywQ.nmUKG.
@@ -497,7 +483,8 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  [%i &]
       ?~  a.a  (rou [%f & --0 1])
-      ?:  &(!=(d %i) (gth (abs a) [%f & (sum:si emx --2) 1]))  [%i &]
+      ?:  &(!=(d %i) (need (gth (abs a) [%f & (sum:si emx:m --2) 1])))
+        [%i &]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -520,7 +507,8 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  a
       ?~  a.a  [%f s.a zer:m]
-      ?:  &(!=(d %i) (gth (abs a) [%f & (sum:si emx --2) 1]))  [%i s.a]
+      ?:  &(!=(d %i) (need (gth (abs a) [%f & (sum:si emx:m --2) 1])))
+        [%i s.a]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -665,8 +653,10 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  ?:(s.a [%i &] [%f & zer:m])
       ?~  a.a  (rou [%f & --0 1])
-      ?:  &(!=(d %i) (lth a [%f & (sum:si emn -1) 1]))  [%f & zer:m]
-      ?:  &(!=(d %i) (gth a [%f & (sum:si emx --1) 1]))  [%i &]
+      ?:  &(!=(d %i) (need (lth a [%f & (sum:si emn:m -1) 1])))
+        [%f & zer:m]
+      ?:  &(!=(d %i) (need (gth a [%f & (sum:si emx:m --1) 1])))
+        [%i &]
       =-
         =+  wp=(^add (^mul prc:m 2) 8)
         =+  nc=16
