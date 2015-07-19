@@ -213,9 +213,9 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      =+  [a=(inv [%f & --0 5]) b=(inv [%f & --0 239])] ::  0.5 ulp
-      =+  [c=(shf:m (atan:e a) --2) d=(atan:e b)]       ::  1 ulp
-      =+  [e=(ned:m (shf:m (sub c d) --2))]             ::  3 ulp (no cancellation)
+      =+  [a=(inv [%f & --0 5]) b=(inv [%f & --0 239])]
+      =+  [c=(shf:m (atan:e a) --2) d=(atan:e b)]
+      =+  [e=(ned:m (shf:m (sub c d) --2))]
       [e [%f & e.e 3]]
     ::
     ++  log2                                            ::  natural logarithm of 2
@@ -244,8 +244,7 @@
       =+  o=(dec (^mul n 2))
       =+  ^=  q  %-  sun
         %+  ^mul  4
-        %+  ^mul  (bex (dec n))
-        %-  fac:m  [0 o]
+        (^mul (bex (dec n)) (fac o))
       =+  ^=  t  %-  sun
         %+  ^mul  3
         =+  [c=0 d=0]
@@ -653,37 +652,49 @@
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  ?:(s.a [%i &] [%f & zer:m])
       ?~  a.a  (rou [%f & --0 1])
-      ?:  &(!=(d %i) (need (lth a [%f & (sum:si emn:m -1) 1])))
+      ?:  &(!=(d %i) (need (lth (abs a) [%f & (sum:si emn:m -1) 1])))
         [%f & zer:m]
-      ?:  &(!=(d %i) (need (gth a [%f & (sum:si emx:m --1) 1])))
+      ?:  &(!=(d %i) (need (gth (abs a) [%f & (sum:si emx:m --1) 1])))
         [%i &]
       =-
-        =+  wp=(^add (^mul prc:m 2) 8)
-        =+  nc=16
+        =+  wp=(^add (^add prc:m (met 0 prc:m)) 8)
+        =+  nc=8
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
+        =+  y=(ka(r %n, p wp, d %i))
         =+  x=(bnd:m (ka(r %n, p wp, d %i)))
         ?~  x  $(wp (^add wp nc), nc (^mul nc 2))
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      =+  ^=  b
-        ?:  =((cmp:si (ibl:m +>.a) --0) -1)  [p=a q=--0]
-        =>(.(r %a) (ran a log2:c |))
+      ?.  s.a                                           ::  exp(-x)=1/exp(x)
+        =+  i=$(s.a &, p (^add prc:m 8))
+        =+  j=(ned:m (inv -.i))
+        =+  k=(ned:m +.i)
+        [j [%f & e.j (^add (^mul a.k 4) 1)]]
+      ::
+      =+  b==>(.(r %a) (ran a log2:c |))                ::  1 ulp (exponent relative error *2)
+      =.  p.b  (shf:m p.b -1)                           ::  now lth 1/2
       =-
-        [(shf:m -.q q.b) (shf:m +.q q.b)]
-      ^=  q  ^-  [fn fn]
-      =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]
-      |-
-      =+  g=(div d [%f & --0 f])
-      =.  f  (^mul f l)
-      =+  q=(ned:m =>(.(r %a) (div d (rou [%f & --0 f]))))
-      =.  d  =>(.(r %a) (mul d p.b))
-      ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))
-        [c [%f & (sum:si e.c (sun:si (^add l 4))) 1]]   ::  XX need to check this thoroughly
-      =.  c  (ned:m (add c q))
-      $(l +(l))
+        [p=(shf:m p q.b) q=(shf:m q q.b)]               ::  p=result q=error
+      =-
+        ?>  ?=([%f *] q)
+        :-  p=(mul p p)
+        q=[%f & e.q (^add (^mul a.q 4) 1)]
+      ::
+      ^-  [p=fn q=fn]  =>  .(r %a)                      ::  err(x^k/k!) <= 2^(k+1) ulp
+      =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]  ::  each term is less than 1/2 the last
+      |-                                                ::  so, err(series) <= 2^(0+2)+n+1 ulp.
+      =+  q=(ned:m (div d [%f & --0 f]))                ::  all rounds away, for sake of
+      ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))   ::  error of squaring the result.
+        [c [%f & e.c (^add l 5)]]
+      %=  $
+        l  +(l)
+        c  (ned:m (add c q))
+        d  (mul d p.b)
+        f  (^mul f +(l))
+      ==
     ::
     ++  log
       |=  [a=fn]  ^-  fn
@@ -815,6 +826,18 @@
         =.  r  swr:m
         =+  q=$(s.a &)
         [(fli -.q) (new:si !(syn:si +.q) (abs:si +.q))]
+      =+  ^=  t                                         ::  first, a quick comparison test
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
+        |-
+        ?:  (^gth wp mxp:m)
+          ~|  %very-large-precision  !!
+        =+  i=(ned:m (b wp))
+        =+  f=(need (lth a i(a (dec a.i))))
+        =+  g=(need (gth a i(a +(a.i))))
+        ?.  =(f g)  f
+        $(wp (^add wp nc), nc (^mul nc 2))
+      ?:  t  [(rou a) --0]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
