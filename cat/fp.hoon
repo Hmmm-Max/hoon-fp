@@ -12,14 +12,6 @@
 =+  fd==>(fl .(p 53, v -1.074, w 2.045, r %n))
 =+  fq==>(fl .(p 113, v -16.494, w 32.765, r %n))
 ::
-::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-::=+  q=(add:e:fd [%f a] [%f b])
-:::-  %noun  [q (drg:fd q)]
-::
-|=  [* [[a=[? @s @u] ~] ~]]
-=+  q=(sin:e:fd [%f a])
-:-  %noun  [q (drg:fd q)]
-::
-::|=  [* [[a=[? @s @u] b=[? @s @u] ~] ~]]
-::=+  [fu=fs(r %u) fd=fs(r %d) fz=fs(r %z) fa=fs(r %a)]
-:::-  %noun  "n: {<(add:fs [%f a] [%f b])>} || u: {<(add:fu [%f a] [%f b])>} || d: {<(add:fd [%f a] [%f b])>} || z: {<(add:fz [%f a] [%f b])>} || a: {<(add:fa [%f a] [%f b])>}"
+|=  [* [[a=@rq ~] ~]]
+=+  q=(acos:e:fq (sea:rq a))
+:-  %noun  [q (drg:fq q)]
