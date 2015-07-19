@@ -19,14 +19,10 @@
   ::                   infinite exponent range
   ++  rou
     |=  [a=fn]  ^-  fn
-    (rau a &)
-  ::
-  ++  rau
-    |=  [a=fn t=?]  ^-  fn
     ?.  ?=([%f *] a)  a
-    ?~  a.a  ?>  t  [%f s.a zer:m]
-    ?:  s.a  (rau:m +>.a t)
-    =.(r swr:m (fli (rau:m +>.a t)))
+    ?~  a.a  [%f s.a zer:m]
+    ?:  s.a  (rou:m +>.a)
+    =.(r swr:m (fli (rou:m +>.a)))
   ::
   ++  fli
     |=  [a=fn]  ^-  fn
@@ -420,8 +416,8 @@
       |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
       ?:  (need (gte a [%f & --0 1]))
         ?.  (need (equ a [%f & --0 1]))  [%n ~]
-        =+  q==>(.(r %d, d %i) (pi:c +(prc:m)))
-        (rau (shf:m q -1) |)
+        =+  q==>(.(r %d, d %i) (ned:m (pi:c +(prc:m))))
+        (rau:m [(sum:si e.q -1) a.q] |)
       =-
         =+  wp=(^add prc:m 10)
         =+  nc=8
@@ -443,14 +439,13 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)
-        =+  q==>(.(r %d, d %i) (pi:c +(prc:m)))
-        ?:  s.a  (rau (shf:m q -1) |)
-        (rau (fli (shf:m q -1)) |)
-      ?:  (need (equ a [%f & --0 1]))
-        =+  q==>(.(r %d, d %i) (pi:c +(prc:m)))
-        ?:  s.a  (rau (shf:m q -2) |)
-        (rau (fli (shf:m q -1)) |)
+        |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
+        =+  q==>(.(r %d, d %i) (ned:m (pi:c +(prc:m))))
+        (rau:m [(sum:si e.q -1) a.q] |)
       |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
+      ?:  (need (equ a [%f & --0 1]))
+        =+  q==>(.(r %d, d %i) (ned:m (pi:c +(prc:m))))
+        (rau:m [(sum:si e.q -2) a.q] |)
       ?:  (need (equ a [%f & zer:m]))  a
       =-
         =+  ^=  wp  %+  ^add
@@ -836,7 +831,7 @@
         [+.x (sun:si ->.y)]
       ::
       ^=  ka  |.  ^-  [[fn @u] fn]
-      =+  b=(ned:m (b prc:m))
+      =+  b=(ned:m (b prc:m))                           ::  b must be accurate to 1 ulp
       =+  [ma=(met 0 a.a) mb=(met 0 a.b)]
       =+  ^=  q
         ?.  =((cmp:si e.a e.b) -1)  --0
@@ -1147,7 +1142,6 @@
           r  (mod (^^mul r 10) s)
           m  (^^mul m 10)
         ==
-      ?>  (^^lth u 10)
       =+  l=(^^lth (^^mul r 2) m)
       =+  ^=  h
         ?|  (^^lth (^^mul s 2) m)
