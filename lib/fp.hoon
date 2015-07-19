@@ -278,7 +278,7 @@
     ++  cos
       |=  [a=fn]  ^-  fn
       ?.  ?=([%f *] a)  [%n ~]
-      ?:  =(a.a 0)  (rou [%f & --0 1])
+      ?~  a.a  (rou [%f & --0 1])
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -328,7 +328,7 @@
     ++  sin
       |=  [a=fn]  ^-  fn
       ?.  ?=([%f *] a)  [%n ~]
-      ?:  =(a.a 0)  [%f s.a zer:m]
+      ?~  a.a  [%f s.a zer:m]
       =-
         =+  wp=(^add prc:m 16)
         =+  nc=16
@@ -357,6 +357,7 @@
     ++  tan
       |=  [a=fn]  ^-  fn
       ?.  ?=([%f *] a)  [%n ~]
+      ?~  a.a  [%f s.a zer:m]
       =-
         =+  wp=(^add prc:m 8)
         =+  nc=8
@@ -439,10 +440,10 @@
       ?:  (need (equ a [%f & --0 1]))
         =+  q==>(.(r %d, d %i) (ned:m (pi:c +(prc:m))))
         (rau:m [(sum:si e.q -2) a.q] |)
-      ?:  (need (equ a [%f & zer:m]))  a
+      ?~  a.a  [%f s.a zer:m]
       =-
         =+  ^=  wp  %+  ^add
-            (^mul (met 0 prc:m) 2)
+            (^mul (met 0 prc:m) 4)
           (^add prc:m 8)
         =+  nc=8
         |-
@@ -470,16 +471,24 @@
       =+  ^=  x
         ?:  =(l 0)  b
         (div b [%f & --0 la])
+      ::  error in z <= 2(2^(2l+1) + 2^(2l+2)/4 - 5/4) + 1 ulps
+      ::                (mult. by 2 due to possible cancellation)
+      ::             <= 2^(2l+1) + 2^(2l+2) - 3/2 ulps
+      ::             <= 2^(2l+3) ulps
+      ::  z_ulp <= (1/4)^l*k_ulp (guaranteed; i^2 <= 1/4, round down on mul, div)
+      ::  error in k <= err(z_0) + 1/4*err(z_1) + ... + (1/4)^l*err(z_l) + z/2 + 2
+      ::             <= (l + 1) 2^3 + flr(l/2) + 3 <= 9l + 11
+      ::  2 more ulps if reduction was necessary
       ?:  &(!=(l 0) (need (lth x [%f & e.k 1])))
-        ?:  -.i  [k [%f & e.k (^add (^mul l 3) 2)]]
-        [(shf:m k --2) [%f & (sum:si e.k --2) (^add (^mul l 3) 4)]]
-      =+  c=(mul b is)
-      =+  y=(div c [%f & --0 lb])
+        ?:  -.i  [k [%f & e.k (^add (^mul l 9) 11)]]
+        [(shf:m k --2) [%f & (sum:si e.k --2) (^add (^mul l 9) 13)]]
+      =+  c==>(.(r %d) (mul b is))
+      =+  y==>(.(r %d) (div c [%f & --0 lb]))
       =+  z=(ned:m (ead x (fli y)))
       ?>  s.z
       %=  $
         l  +(l)
-        b  (ned:m (mul c is))
+        b  (ned:m =>(.(r %d) (mul c is)))
         k  (ned:m (add k z))
       ==
     ::
@@ -533,7 +542,7 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  (rou [%f s.a --0 1])
-      ?~  a.a  [%f & zer:m]
+      ?~  a.a  [%f s.a zer:m]
       |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
       =-
         =+  wp=(^add prc:m 8)
@@ -591,7 +600,7 @@
       |=  [a=fn]  ^-  fn
       ?:  ?=([%n *] a)  [%n ~]
       ?:  ?=([%i *] a)  a
-      ?:  =(a.a 0)  [%f s.a zer:m]
+      ?~  a.a  [%f s.a zer:m]
       |-  ?.  s.a  (fli =.(r swr:m $(s.a &)))
       =-
         =+  wp=(^add prc:m 16)
@@ -807,7 +816,7 @@
     ++  ran                                             ::  range reduction, p=a-qb
       |=  [a=fn b=$+(@ fn) c=?]  ^-  [p=fn q=@s]        ::  b: accepts precision & produces const
       ?.  ?=([%f *] a)  [[%n ~] --0]                    ::  c: congruence modulo (|p| < b/2)
-      ?~  a.a  [[%f & zer:m] --0]
+      ?~  a.a  [[%f s.a zer:m] --0]
       |-  ^-  [p=fn q=@s]  ?.  s.a
         =.  r  swr:m
         =+  q=$(s.a &)
