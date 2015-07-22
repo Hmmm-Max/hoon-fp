@@ -657,7 +657,7 @@
       ?:  &(!=(d %i) (need (gth (abs a) [%f & (sum:si emx:m --1) 1])))
         [%i &]
       =-
-        =+  wp=(^add (^add prc:m (met 0 prc:m)) 8)
+        =+  wp=(^add prc:m (^add (met 0 prc:m) 12))
         =+  nc=8
         |-
         ?:  (^gth wp mxp:m)
@@ -668,32 +668,28 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      ?.  s.a                                           ::  exp(-x)=1/exp(x)
-        =+  i=$(s.a &, p (^add prc:m 8))
-        =+  j=(ned:m (inv -.i))
-        =+  k=(ned:m +.i)
+      ?.  s.a
+        =+  i=$(s.a &, p (^add prc:m 2))
+        =+  [j=(ned:m (inv -.i)) k=(ned:m +.i)]
         [j [%f & e.j (^add (^mul a.k 4) 1)]]
+      =+  b==>(.(r %a) (ran a log2:c |))
+      =.  p.b  (shf:m p.b -1)
       ::
-      =+  b==>(.(r %a) (ran a log2:c |))                ::  1 ulp (exponent relative error *2)
-      =.  p.b  (shf:m p.b -1)                           ::  now lth 1/2
-      =-
-        [p=(shf:m p q.b) q=(shf:m q q.b)]               ::  p=result q=error
-      =-
-        ?>  ?=([%f *] q)
-        :-  p=(mul p p)
-        q=[%f & e.q (^add (^mul a.q 4) 1)]
+      =<  [(shf:m p q.b) (shf:m q q.b)]
+      =-  .(p (mul p p), q q(a (^add (^mul a.q 4) 13)))
       ::
-      ^-  [p=fn q=fn]  =>  .(r %a)                      ::  err(x^k/k!) <= 2^(k+1) ulp
-      =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1 f=1]  ::  each term is less than 1/2 the last
-      |-                                                ::  so, err(series) <= 2^(0+2)+n+1 ulp.
-      =+  q=(ned:m (div d [%f & --0 f]))                ::  all rounds away, for sake of
-      ?:  |(=(a.q 0) =((cmp:si (ibl:m +>.q) e:c) -1))   ::  error of squaring the result.
-        [c [%f & e.c (^add l 5)]]
+      ^-  [p=fn q=[%f s=? e=@s a=@u]]  =>  .(r %a)      ::  p=result q=error
+      =+  [c=(ned:m (rou [%f & --0 1])) d=p.b l=1]
+      =+  [l=1 f=c]
+      |-
+      =+  q=(ned:m (mul d f))
+      ?:  |(=((cmp:si (ibl:m +>.q) e:c) -1))
+        [c [%f & e.c (^add (^mul l 5) 2)]]
       %=  $
         l  +(l)
         c  (ned:m (add c q))
         d  (mul d p.b)
-        f  (^mul f +(l))
+        f  (ned:m (div f [%f & --0 +(l)]))
       ==
     ::
     ++  log
@@ -839,8 +835,8 @@
         $(wp (^add wp nc), nc (^mul nc 2))
       ?:  t  [(rou a) --0]
       =-
-        =+  wp=(^add prc:m 16)
-        =+  nc=16
+        =+  wp=(^add prc:m 8)
+        =+  nc=8
         |-
         ?:  (^gth wp mxp:m)
           ~|  %very-large-precision  !!
@@ -1247,7 +1243,7 @@
     ++  spn  [e=emn a=(bex (dec prc))]                  ::  smallest "normal"
     ++  lfn  [e=emx a=(fil 0 prc 1)]                    ::  largest
     ++  lfe  (sum:si emx (sun:si prc))                  ::  2^lfe is larger than all floats
-    ++  zer  [e=--0 a=0]                                ::  zero
+    ++  zer  [e=--0 a=0]
     --
   --
 ::
@@ -1311,7 +1307,7 @@
   ++  cos  |=  [a=@r]  (bif (cos:e:pa (sea a)))
   ++  sin  |=  [a=@r]  (bif (sin:e:pa (sea a)))
   ++  tan  |=  [a=@r]  (bif (tan:e:pa (sea a)))
-  ++  exp  |=  [a=@r]  (bif (exp:e:pa (sea a)))
+  ++  nex  |=  [a=@r]  (bif (exp:e:pa (sea a)))
   ++  log  |=  [a=@r]  (bif (log:e:pa (sea a)))
   ++  lth  |=  [a=@r b=@r]  (lth:pa (sea a) (sea b))
   ++  lte  |=  [a=@r b=@r]  (lte:pa (sea a) (sea b))
@@ -1332,6 +1328,7 @@
 ++  rylq  |=  a=dn  ^-  @rq  (grd:rq a)
 ::
 ++  rd
+  ~%  %rd  +  ~
   |%
   ++  ma
     =>(ff .(w 11, p 52, b --1.023, f %.n, r %n))
@@ -1339,17 +1336,17 @@
     |=  [a=@rd]  (sea:ma a)
   ++  bit
     |=  [a=fn]  ^-  @rd  (bit:ma a)
-  ++  add
+  ++  add  ~/  %add
     |=  [a=@rd b=@rd]  ^-  @rd  (add:ma a b)
-  ++  sub
+  ++  sub  ~/  %sub
     |=  [a=@rd b=@rd]  ^-  @rd  (sub:ma a b)
-  ++  mul
+  ++  mul  ~/  %mul
     |=  [a=@rd b=@rd]  ^-  @rd  (mul:ma a b)
-  ++  div
+  ++  div  ~/  %div
     |=  [a=@rd b=@rd]  ^-  @rd  (div:ma a b)
   ++  fma
     |=  [a=@rd b=@rd c=@rd]  ^-  @rd  (fma:ma a b c)
-  ++  sqt
+  ++  sqt  ~/  %sqt
     |=  [a=@rd]  ^-  @rd  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rd  (sun:ma a)
@@ -1357,13 +1354,13 @@
   ++  cos  |=  [a=@rd]  ^-  @rd  (cos:ma a)
   ++  sin  |=  [a=@rd]  ^-  @rd  (sin:ma a)
   ++  tan  |=  [a=@rd]  ^-  @rd  (tan:ma a)
-  ++  exp  |=  [a=@rd]  ^-  @rd  (exp:ma a)
+  ++  nex  |=  [a=@rd]  ^-  @rd  (nex:ma a)
   ++  log  |=  [a=@rd]  ^-  @rd  (log:ma a)
-  ++  lth  |=  [a=@rd b=@rd]  (lth:ma a b)
-  ++  lte  |=  [a=@rd b=@rd]  (lte:ma a b)
-  ++  equ  |=  [a=@rd b=@rd]  (equ:ma a b)
-  ++  gte  |=  [a=@rd b=@rd]  (gte:ma a b)
-  ++  gth  |=  [a=@rd b=@rd]  (gth:ma a b)
+  ++  lth  ~/  %lth  |=  [a=@rd b=@rd]  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rd b=@rd]  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rd b=@rd]  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rd b=@rd]  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rd b=@rd]  (gth:ma a b)
   ++  sig  |=  [a=@rd]  (sig:ma a)
   ++  exp  |=  [a=@rd]  (exp:ma a)
   ++  drg  |=  [a=@rd]  (drg:ma a)
@@ -1371,6 +1368,7 @@
   --
 ::
 ++  rs
+  ~%  %rs  +  ~
   |%
   ++  ma
     =>(ff .(w 8, p 23, b --127, f %.n, r %n))
@@ -1378,17 +1376,17 @@
     |=  [a=@rs]  (sea:ma a)
   ++  bit
     |=  [a=fn]  ^-  @rs  (bit:ma a)
-  ++  add
+  ++  add  ~/  %add
     |=  [a=@rs b=@rs]  ^-  @rs  (add:ma a b)
-  ++  sub
+  ++  sub  ~/  %sub
     |=  [a=@rs b=@rs]  ^-  @rs  (sub:ma a b)
-  ++  mul
+  ++  mul  ~/  %mul
     |=  [a=@rs b=@rs]  ^-  @rs  (mul:ma a b)
-  ++  div
+  ++  div  ~/  %div
     |=  [a=@rs b=@rs]  ^-  @rs  (div:ma a b)
   ++  fma
     |=  [a=@rs b=@rs c=@rs]  ^-  @rs  (fma:ma a b c)
-  ++  sqt
+  ++  sqt  ~/  %sqt
     |=  [a=@rs]  ^-  @rs  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rs  (sun:ma a)
@@ -1396,13 +1394,13 @@
   ++  cos  |=  [a=@rs]  ^-  @rs  (cos:ma a)
   ++  sin  |=  [a=@rs]  ^-  @rs  (sin:ma a)
   ++  tan  |=  [a=@rs]  ^-  @rs  (tan:ma a)
-  ++  exp  |=  [a=@rs]  ^-  @rs  (exp:ma a)
+  ++  nex  |=  [a=@rs]  ^-  @rs  (nex:ma a)
   ++  log  |=  [a=@rs]  ^-  @rs  (log:ma a)
-  ++  lth  |=  [a=@rs b=@rs]  (lth:ma a b)
-  ++  lte  |=  [a=@rs b=@rs]  (lte:ma a b)
-  ++  equ  |=  [a=@rs b=@rs]  (equ:ma a b)
-  ++  gte  |=  [a=@rs b=@rs]  (gte:ma a b)
-  ++  gth  |=  [a=@rs b=@rs]  (gth:ma a b)
+  ++  lth  ~/  %lth  |=  [a=@rs b=@rs]  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rs b=@rs]  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rs b=@rs]  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rs b=@rs]  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rs b=@rs]  (gth:ma a b)
   ++  sig  |=  [a=@rs]  (sig:ma a)
   ++  exp  |=  [a=@rs]  (exp:ma a)
   ++  drg  |=  [a=@rs]  (drg:ma a)
@@ -1435,7 +1433,7 @@
   ++  cos  |=  [a=@rh]  ^-  @rh  (cos:ma a)
   ++  sin  |=  [a=@rh]  ^-  @rh  (sin:ma a)
   ++  tan  |=  [a=@rh]  ^-  @rh  (tan:ma a)
-  ++  exp  |=  [a=@rh]  ^-  @rh  (exp:ma a)
+  ++  nex  |=  [a=@rh]  ^-  @rh  (nex:ma a)
   ++  log  |=  [a=@rh]  ^-  @rh  (log:ma a)
   ++  lth  |=  [a=@rh b=@rh]  (lth:ma a b)
   ++  lte  |=  [a=@rh b=@rh]  (lte:ma a b)
@@ -1474,7 +1472,7 @@
   ++  cos  |=  [a=@rq]  ^-  @rq  (cos:ma a)
   ++  sin  |=  [a=@rq]  ^-  @rq  (sin:ma a)
   ++  tan  |=  [a=@rq]  ^-  @rq  (tan:ma a)
-  ++  exp  |=  [a=@rq]  ^-  @rq  (exp:ma a)
+  ++  nex  |=  [a=@rq]  ^-  @rq  (nex:ma a)
   ++  log  |=  [a=@rq]  ^-  @rq  (log:ma a)
   ++  lth  |=  [a=@rq b=@rq]  (lth:ma a b)
   ++  lte  |=  [a=@rq b=@rq]  (lte:ma a b)
