@@ -10,8 +10,9 @@
 
 ## In progress
 
-* Jets for multiple-precision (using MPFR which is under LGPL license)
-* Jets for ++rd, ++rs, possibly ++rq
+* Jets for multiple-precision (basic operations will have jets, elementary functions moved to library)
+* Jets for ++rd, ++rs, ++rq (SoftFloat)
+* ++rh should not have math operations, just conversions to @rs and back
 
 ## Planned
 
