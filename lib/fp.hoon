@@ -408,8 +408,7 @@
         +.x
       ::
       ^=  ka  |.  ^-  [fn fn]
-      =+  ^=  s  =>  .(r %u)
-        ?:  =((ibl:m +>.a) -1)  (emu a a)  (mul a a)    ::  a >= .5, cancellation danger
+      =+  s=(emu a a)
       =+  t==>(.(r %d) (sqt (sub [%f & --0 1] s)))      ::  4 ulp
       =+  u=(ned:m (atan (div a t)))                    ::  9 ulp
       [u [%f & e.u 9]]
@@ -854,7 +853,7 @@
       =+  al=a(a (end 0 (abs:si q) a.a))
       =+  ah=a(a (rsh 0 (abs:si q) a.a), e (sum:si e.a q))
       =+  w=(abs:si (dif:si e.ah e.b))
-      =+  z=(dod:m (bex w) a.b)
+      =+  z=(pod:m w a.b)
       =+  g=(^mul a.ah +.z)
       =+  ^=  x  ^-  [[? @u] @u]
         ?:  c
@@ -1193,6 +1192,21 @@
       :_  f
       (dif:si (sun:si a) (sun:si (^^mul b f)))
     ::
+    ++  pod                                             ::  (dod (bex a) b)
+      |=  [a=@u b=@u]  ^-  [@u @u]
+      ?<  =(b 0)
+      =+  mb=(met 0 b)
+      =-  [(mod -.x b) (^^add +.x (^^div -.x b))]
+      ^=  x
+      |-  ^-  [@u @u]
+      ?:  (^^lte a mb)  [(bex a) 0]
+      =+  y=$(a (rsh 0 1 a))
+      =+  z=(dod (^^mul -.y -.y) b)
+      =+  d=(^^add (^^mul +.y b) (^^mul -.y 2))
+      =+  e=(^^add (^^mul +.y d) +.z)
+      ?~  (end 0 1 a)  [-.z e]
+      [(^^mul -.z 2) (^^mul e 2)]
+    ::
     ++  rem
       |=  [a=fn b=fn]                                   ::  a cmod b
       =.  b  (abs b)
@@ -1309,11 +1323,11 @@
   ++  tan  |=  [a=@r]  (bif (tan:e:pa (sea a)))
   ++  nex  |=  [a=@r]  (bif (exp:e:pa (sea a)))
   ++  log  |=  [a=@r]  (bif (log:e:pa (sea a)))
-  ++  lth  |=  [a=@r b=@r]  (lth:pa (sea a) (sea b))
-  ++  lte  |=  [a=@r b=@r]  (lte:pa (sea a) (sea b))
-  ++  equ  |=  [a=@r b=@r]  (equ:pa (sea a) (sea b))
-  ++  gte  |=  [a=@r b=@r]  (gte:pa (sea a) (sea b))
-  ++  gth  |=  [a=@r b=@r]  (gth:pa (sea a) (sea b))
+  ++  lth  |=  [a=@r b=@r]  (fall (lth:pa (sea a) (sea b)) |)
+  ++  lte  |=  [a=@r b=@r]  (fall (lte:pa (sea a) (sea b)) |)
+  ++  equ  |=  [a=@r b=@r]  (fall (equ:pa (sea a) (sea b)) |)
+  ++  gte  |=  [a=@r b=@r]  (fall (gte:pa (sea a) (sea b)) |)
+  ++  gth  |=  [a=@r b=@r]  (fall (gth:pa (sea a) (sea b)) |)
   ++  drg  |=  [a=@r]  (drg:pa (sea a))
   ++  grd  |=  [a=dn]  (bif (grd:pa a))
   --
@@ -1344,18 +1358,13 @@
     |=  [a=@rd b=@rd]  ^-  @rd  (mul:ma a b)
   ++  div  ~/  %div
     |=  [a=@rd b=@rd]  ^-  @rd  (div:ma a b)
-  ++  fma
+  ++  fma  ~/  %fma
     |=  [a=@rd b=@rd c=@rd]  ^-  @rd  (fma:ma a b c)
   ++  sqt  ~/  %sqt
     |=  [a=@rd]  ^-  @rd  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rd  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rd  (san:ma a)
-  ++  cos  |=  [a=@rd]  ^-  @rd  (cos:ma a)
-  ++  sin  |=  [a=@rd]  ^-  @rd  (sin:ma a)
-  ++  tan  |=  [a=@rd]  ^-  @rd  (tan:ma a)
-  ++  nex  |=  [a=@rd]  ^-  @rd  (nex:ma a)
-  ++  log  |=  [a=@rd]  ^-  @rd  (log:ma a)
   ++  lth  ~/  %lth  |=  [a=@rd b=@rd]  (lth:ma a b)
   ++  lte  ~/  %lte  |=  [a=@rd b=@rd]  (lte:ma a b)
   ++  equ  ~/  %equ  |=  [a=@rd b=@rd]  (equ:ma a b)
@@ -1384,18 +1393,13 @@
     |=  [a=@rs b=@rs]  ^-  @rs  (mul:ma a b)
   ++  div  ~/  %div
     |=  [a=@rs b=@rs]  ^-  @rs  (div:ma a b)
-  ++  fma
+  ++  fma  ~/  %fma
     |=  [a=@rs b=@rs c=@rs]  ^-  @rs  (fma:ma a b c)
   ++  sqt  ~/  %sqt
     |=  [a=@rs]  ^-  @rs  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rs  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rs  (san:ma a)
-  ++  cos  |=  [a=@rs]  ^-  @rs  (cos:ma a)
-  ++  sin  |=  [a=@rs]  ^-  @rs  (sin:ma a)
-  ++  tan  |=  [a=@rs]  ^-  @rs  (tan:ma a)
-  ++  nex  |=  [a=@rs]  ^-  @rs  (nex:ma a)
-  ++  log  |=  [a=@rs]  ^-  @rs  (log:ma a)
   ++  lth  ~/  %lth  |=  [a=@rs b=@rs]  (lth:ma a b)
   ++  lte  ~/  %lte  |=  [a=@rs b=@rs]  (lte:ma a b)
   ++  equ  ~/  %equ  |=  [a=@rs b=@rs]  (equ:ma a b)
@@ -1407,6 +1411,41 @@
   ++  grd  |=  [a=dn]  (grd:ma a)
   --
 ::
+++  rq
+  ~%  %rq  +  ~
+  |%
+  ++  ma
+    =>(ff .(w 15, p 112, b --16.383, f %.n, r %n))
+  ++  sea
+    |=  [a=@rq]  (sea:ma a)
+  ++  bit
+    |=  [a=fn]  ^-  @rq  (bit:ma a)
+  ++  add  ~/  %add
+    |=  [a=@rq b=@rq]  ^-  @rq  (add:ma a b)
+  ++  sub  ~/  %sub
+    |=  [a=@rq b=@rq]  ^-  @rq  (sub:ma a b)
+  ++  mul  ~/  %mul
+    |=  [a=@rq b=@rq]  ^-  @rq  (mul:ma a b)
+  ++  div  ~/  %div
+    |=  [a=@rq b=@rq]  ^-  @rq  (div:ma a b)
+  ++  fma  ~/  %fma
+    |=  [a=@rq b=@rq c=@rq]  ^-  @rq  (fma:ma a b c)
+  ++  sqt  ~/  %sqt
+    |=  [a=@rq]  ^-  @rq  (sqt:ma a)
+  ::
+  ++  sun  |=  [a=@u]  ^-  @rq  (sun:ma a)
+  ++  san  |=  [a=@s]  ^-  @rq  (san:ma a)
+  ++  lth  ~/  %lth  |=  [a=@rq b=@rq]  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rq b=@rq]  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rq b=@rq]  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rq b=@rq]  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rq b=@rq]  (gth:ma a b)
+  ++  sig  |=  [a=@rq]  (sig:ma a)
+  ++  exp  |=  [a=@rq]  (exp:ma a)
+  ++  drg  |=  [a=@rq]  (drg:ma a)
+  ++  grd  |=  [a=dn]  (grd:ma a)
+  --
+::
 ++  rh
   |%
   ++  ma
@@ -1415,26 +1454,9 @@
     |=  [a=@rh]  (sea:ma a)
   ++  bit
     |=  [a=fn]  ^-  @rh  (bit:ma a)
-  ++  add
-    |=  [a=@rh b=@rh]  ^-  @rh  (add:ma a b)
-  ++  sub
-    |=  [a=@rh b=@rh]  ^-  @rh  (sub:ma a b)
-  ++  mul
-    |=  [a=@rh b=@rh]  ^-  @rh  (mul:ma a b)
-  ++  div
-    |=  [a=@rh b=@rh]  ^-  @rh  (div:ma a b)
-  ++  fma
-    |=  [a=@rh b=@rh c=@rh]  ^-  @rh  (fma:ma a b c)
-  ++  sqt
-    |=  [a=@rh]  ^-  @rh  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rh  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rh  (san:ma a)
-  ++  cos  |=  [a=@rh]  ^-  @rh  (cos:ma a)
-  ++  sin  |=  [a=@rh]  ^-  @rh  (sin:ma a)
-  ++  tan  |=  [a=@rh]  ^-  @rh  (tan:ma a)
-  ++  nex  |=  [a=@rh]  ^-  @rh  (nex:ma a)
-  ++  log  |=  [a=@rh]  ^-  @rh  (log:ma a)
   ++  lth  |=  [a=@rh b=@rh]  (lth:ma a b)
   ++  lte  |=  [a=@rh b=@rh]  (lte:ma a b)
   ++  equ  |=  [a=@rh b=@rh]  (equ:ma a b)
@@ -1443,45 +1465,6 @@
   ++  sig  |=  [a=@rh]  (sig:ma a)
   ++  exp  |=  [a=@rh]  (exp:ma a)
   ++  drg  |=  [a=@rh]  (drg:ma a)
-  ++  grd  |=  [a=dn]  (grd:ma a)
-  --
-::
-++  rq
-  |%
-  ++  ma
-    =>(ff .(w 15, p 112, b --16.383, f %.n, r %n))
-  ++  sea
-    |=  [a=@rq]  (sea:ma a)
-  ++  bit
-    |=  [a=fn]  ^-  @rq  (bit:ma a)
-  ++  add
-    |=  [a=@rq b=@rq]  ^-  @rq  (add:ma a b)
-  ++  sub
-    |=  [a=@rq b=@rq]  ^-  @rq  (sub:ma a b)
-  ++  mul
-    |=  [a=@rq b=@rq]  ^-  @rq  (mul:ma a b)
-  ++  div
-    |=  [a=@rq b=@rq]  ^-  @rq  (div:ma a b)
-  ++  fma
-    |=  [a=@rq b=@rq c=@rq]  ^-  @rq  (fma:ma a b c)
-  ++  sqt
-    |=  [a=@rq]  ^-  @rq  (sqt:ma a)
-  ::
-  ++  sun  |=  [a=@u]  ^-  @rq  (sun:ma a)
-  ++  san  |=  [a=@s]  ^-  @rq  (san:ma a)
-  ++  cos  |=  [a=@rq]  ^-  @rq  (cos:ma a)
-  ++  sin  |=  [a=@rq]  ^-  @rq  (sin:ma a)
-  ++  tan  |=  [a=@rq]  ^-  @rq  (tan:ma a)
-  ++  nex  |=  [a=@rq]  ^-  @rq  (nex:ma a)
-  ++  log  |=  [a=@rq]  ^-  @rq  (log:ma a)
-  ++  lth  |=  [a=@rq b=@rq]  (lth:ma a b)
-  ++  lte  |=  [a=@rq b=@rq]  (lte:ma a b)
-  ++  equ  |=  [a=@rq b=@rq]  (equ:ma a b)
-  ++  gte  |=  [a=@rq b=@rq]  (gte:ma a b)
-  ++  gth  |=  [a=@rq b=@rq]  (gth:ma a b)
-  ++  sig  |=  [a=@rq]  (sig:ma a)
-  ++  exp  |=  [a=@rq]  (exp:ma a)
-  ++  drg  |=  [a=@rq]  (drg:ma a)
   ++  grd  |=  [a=dn]  (grd:ma a)
   --
 --

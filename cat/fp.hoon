@@ -12,6 +12,6 @@
 =+  fd==>(fl .(p 53, v -1.074, w 2.045, r %n))
 =+  fq==>(fl .(p 113, v -16.494, w 32.765, r %n))
 ::
-|=  [* [[a=@rq ~] ~]]
-=+  q=(acos:e:fq (sea:rq a))
-:-  %noun  [q (drg:fq q)]
+|=  [* [[a=[@u @u] ~] ~]]
+=+  q=(pod:m:fq -.a +.a)
+:-  %noun  q
