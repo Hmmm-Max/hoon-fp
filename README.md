@@ -7,16 +7,18 @@
 * Float-to-decimal (Dragon4), Decimal-to-float
 * Fix parsers, printing
 * Elementary functions (trigonometric, logarithm, exponent...)
+* Jets for ++rd, ++rs, ++rq (SoftFloat)
 
 ## In progress
 
-* Jets for multiple-precision (basic operations will have jets, elementary functions moved to library)
-* Jets for ++rd, ++rs, ++rq (SoftFloat)
-* ++rh should not have math operations, just conversions to @rs and back
+* Jet for Dragon4
+* Misc cleanup
 
 ## Planned
 
 * Fractal demo
+* ++fl basic operation jets?
+* Elementary functions will be cleaned up, placed in a library
 
 ## Not planned ATM
 

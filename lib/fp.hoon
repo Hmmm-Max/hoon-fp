@@ -186,8 +186,8 @@
     =>  .(r %n)                                         ::  always rnd nearest
     =+  q=(abs:si e.a)
     ?:  (syn:si e.a)
-      (mul [%f s.a --0 a.a] [%f & e.a (pow:m 5 q)])
-    (div [%f s.a --0 a.a] [%f & (sun:si q) (pow:m 5 q)])
+      (mul [%f s.a --0 a.a] [%f & e.a (pow 5 q)])
+    (div [%f s.a --0 a.a] [%f & (sun:si q) (pow 5 q)])
   ::
   ++  m                                                 ::  internal functions, constants
     |%                                                  ::  don't put 0s into [@s @u] args
@@ -252,25 +252,12 @@
       =+  v=(dif:si (sun:si ma) (sun:si +((^^add mb prc))))
       =.  a  ?:  (syn:si v)  a
       a(e (sum:si v e.a), a (lsh 0 (abs:si v) a.a))
-      =+  [j=(dif:si e.a e.b) q=(^^div a.a a.b)]
-      =+  k=(mod a.a a.b)
-      (rau [j q] =(k 0))
+      =+  [j=(dif:si e.a e.b) q=(dvr a.a a.b)]
+      (rau [j p.q] =(q.q 0))
     ::
     ++  fma
       |=  [a=[e=@s a=@u] b=[e=@s a=@u] c=[e=@s a=@u]]  ^-  fn
       (add [(sum:si e.a e.b) (^^mul a.a a.b)] c |)
-    ::
-    ::  integer square root w/sticky bit
-    ++  itr
-      |=  [a=@]  ^-  [@ ?]
-      =+  [q=(^^div (dec (xeb a)) 2) r=0]
-      =+  ^=  c
-        |-  =+  s=(^^add r (bex q))
-        =+  (^^mul s s)
-        ?:  =(q 0)
-          ?:  (^^lte - a)  [s -]  [r (^^mul r r)]
-        ?:  (^^lte - a)  $(r s, q (dec q))  $(q (dec q))
-      [-.c =(+.c a)]
     ::
     ++  frd                                             ::  a/2, rounds to -inf
       |=  [a=@s]
@@ -287,8 +274,8 @@
         =+  ?:  =((dis - 1) (dis (abs:si e.a) 1))  -
           (^^add - 1)                                   ::  enforce even exponent
         a(e (dif:si e.a (sun:si -)), a (lsh 0 - a.a))
-      =+  [y=(itr a.a) z=(frd e.a)]
-      (rau [z -.y] +.y)
+      =+  [y=(^^sqt a.a) z=(frd e.a)]
+      (rau [z p.y] =(q.y 0))
     ::
     ++  lth
       |=  [a=[e=@s a=@u] b=[e=@s a=@u]]  ^-  ?
@@ -426,10 +413,12 @@
       |-  ?:  (^gte (^^add (^^mul r 2) m) (^^mul s 2))
         $(s (^^mul s 10), k (sum:si k --1))
       =+  [u=0 o=0]
-      |-  =>  %=  .
+      |-
+      =+  v=(dvr (^^mul r 10) s)
+      =>  %=  .
           k  (dif:si k --1)
-          u  (^^div (^^mul r 10) s)
-          r  (mod (^^mul r 10) s)
+          u  p.v
+          r  q.v
           m  (^^mul m 10)
         ==
       =+  l=(^^lth (^^mul r 2) m)
@@ -443,16 +432,6 @@
       =.  o  (^^add (^^mul o 10) ?:(q +(u) u))
       [k o]
     ::
-    ++  pow                                             ::  a^b
-      |=  [a=@ b=@]
-      ?:  =(b 0)  1
-      |-  ?:  =(b 1)  a
-      =+  c=$(b (^^div b 2))
-      =+  d=(^^mul c c)
-      ?:  =((end 0 1 b) 1)
-        (^^mul d a)
-      d
-    ::
     ++  ned
       |=  [a=fn]  ^-  [%f s=? e=@s a=@u]
       ?:  ?=([%f *] a)  a
@@ -465,7 +444,6 @@
     ::
     ++  swr  ?+(r r %d %u, %u %d)
     ++  prc  ?>((^gth p 1) p)
-    ++  mxp  20.000                                     ::  max precision for some stuff
     ++  den  d
     ++  emn  v
     ++  emm  (sum:si emn (sun:si (dec prc)))
@@ -563,25 +541,25 @@
   ++  bit
     |=  [a=fn]  ^-  @rd  (bit:ma a)
   ++  add  ~/  %add
-    |=  [a=@rd b=@rd]  ^-  @rd  (add:ma a b)
+    |=  [a=@rd b=@rd]  ^-  @rd  ~|  %rd-fail  (add:ma a b)
   ++  sub  ~/  %sub
-    |=  [a=@rd b=@rd]  ^-  @rd  (sub:ma a b)
+    |=  [a=@rd b=@rd]  ^-  @rd  ~|  %rd-fail  (sub:ma a b)
   ++  mul  ~/  %mul
-    |=  [a=@rd b=@rd]  ^-  @rd  (mul:ma a b)
+    |=  [a=@rd b=@rd]  ^-  @rd  ~|  %rd-fail  (mul:ma a b)
   ++  div  ~/  %div
-    |=  [a=@rd b=@rd]  ^-  @rd  (div:ma a b)
+    |=  [a=@rd b=@rd]  ^-  @rd  ~|  %rd-fail  (div:ma a b)
   ++  fma  ~/  %fma
-    |=  [a=@rd b=@rd c=@rd]  ^-  @rd  (fma:ma a b c)
+    |=  [a=@rd b=@rd c=@rd]  ^-  @rd  ~|  %rd-fail  (fma:ma a b c)
   ++  sqt  ~/  %sqt
-    |=  [a=@rd]  ^-  @rd  (sqt:ma a)
+    |=  [a=@rd]  ^-  @rd  ~|  %rd-fail  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rd  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rd  (san:ma a)
-  ++  lth  ~/  %lth  |=  [a=@rd b=@rd]  (lth:ma a b)
-  ++  lte  ~/  %lte  |=  [a=@rd b=@rd]  (lte:ma a b)
-  ++  equ  ~/  %equ  |=  [a=@rd b=@rd]  (equ:ma a b)
-  ++  gte  ~/  %gte  |=  [a=@rd b=@rd]  (gte:ma a b)
-  ++  gth  ~/  %gth  |=  [a=@rd b=@rd]  (gth:ma a b)
+  ++  lth  ~/  %lth  |=  [a=@rd b=@rd]  ~|  %rd-fail  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rd b=@rd]  ~|  %rd-fail  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rd b=@rd]  ~|  %rd-fail  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rd b=@rd]  ~|  %rd-fail  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rd b=@rd]  ~|  %rd-fail  (gth:ma a b)
   ++  sig  |=  [a=@rd]  (sig:ma a)
   ++  exp  |=  [a=@rd]  (exp:ma a)
   ++  drg  |=  [a=@rd]  (drg:ma a)
@@ -598,25 +576,25 @@
   ++  bit
     |=  [a=fn]  ^-  @rs  (bit:ma a)
   ++  add  ~/  %add
-    |=  [a=@rs b=@rs]  ^-  @rs  (add:ma a b)
+    |=  [a=@rs b=@rs]  ^-  @rs  ~|  %rs-fail  (add:ma a b)
   ++  sub  ~/  %sub
-    |=  [a=@rs b=@rs]  ^-  @rs  (sub:ma a b)
+    |=  [a=@rs b=@rs]  ^-  @rs  ~|  %rs-fail  (sub:ma a b)
   ++  mul  ~/  %mul
-    |=  [a=@rs b=@rs]  ^-  @rs  (mul:ma a b)
+    |=  [a=@rs b=@rs]  ^-  @rs  ~|  %rs-fail  (mul:ma a b)
   ++  div  ~/  %div
-    |=  [a=@rs b=@rs]  ^-  @rs  (div:ma a b)
+    |=  [a=@rs b=@rs]  ^-  @rs  ~|  %rs-fail  (div:ma a b)
   ++  fma  ~/  %fma
-    |=  [a=@rs b=@rs c=@rs]  ^-  @rs  (fma:ma a b c)
+    |=  [a=@rs b=@rs c=@rs]  ^-  @rs  ~|  %rs-fail  (fma:ma a b c)
   ++  sqt  ~/  %sqt
     |=  [a=@rs]  ^-  @rs  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rs  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rs  (san:ma a)
-  ++  lth  ~/  %lth  |=  [a=@rs b=@rs]  (lth:ma a b)
-  ++  lte  ~/  %lte  |=  [a=@rs b=@rs]  (lte:ma a b)
-  ++  equ  ~/  %equ  |=  [a=@rs b=@rs]  (equ:ma a b)
-  ++  gte  ~/  %gte  |=  [a=@rs b=@rs]  (gte:ma a b)
-  ++  gth  ~/  %gth  |=  [a=@rs b=@rs]  (gth:ma a b)
+  ++  lth  ~/  %lth  |=  [a=@rs b=@rs]  ~|  %rs-fail  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rs b=@rs]  ~|  %rs-fail  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rs b=@rs]  ~|  %rs-fail  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rs b=@rs]  ~|  %rs-fail  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rs b=@rs]  ~|  %rs-fail  (gth:ma a b)
   ++  sig  |=  [a=@rs]  (sig:ma a)
   ++  exp  |=  [a=@rs]  (exp:ma a)
   ++  drg  |=  [a=@rs]  (drg:ma a)
@@ -633,25 +611,25 @@
   ++  bit
     |=  [a=fn]  ^-  @rq  (bit:ma a)
   ++  add  ~/  %add
-    |=  [a=@rq b=@rq]  ^-  @rq  (add:ma a b)
+    |=  [a=@rq b=@rq]  ^-  @rq  ~|  %rq-fail  (add:ma a b)
   ++  sub  ~/  %sub
-    |=  [a=@rq b=@rq]  ^-  @rq  (sub:ma a b)
+    |=  [a=@rq b=@rq]  ^-  @rq  ~|  %rq-fail  (sub:ma a b)
   ++  mul  ~/  %mul
-    |=  [a=@rq b=@rq]  ^-  @rq  (mul:ma a b)
+    |=  [a=@rq b=@rq]  ^-  @rq  ~|  %rq-fail  (mul:ma a b)
   ++  div  ~/  %div
-    |=  [a=@rq b=@rq]  ^-  @rq  (div:ma a b)
+    |=  [a=@rq b=@rq]  ^-  @rq  ~|  %rq-fail  (div:ma a b)
   ++  fma  ~/  %fma
-    |=  [a=@rq b=@rq c=@rq]  ^-  @rq  (fma:ma a b c)
+    |=  [a=@rq b=@rq c=@rq]  ^-  @rq  ~|  %rq-fail  (fma:ma a b c)
   ++  sqt  ~/  %sqt
-    |=  [a=@rq]  ^-  @rq  (sqt:ma a)
+    |=  [a=@rq]  ^-  @rq  ~|  %rq-fail  (sqt:ma a)
   ::
   ++  sun  |=  [a=@u]  ^-  @rq  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rq  (san:ma a)
-  ++  lth  ~/  %lth  |=  [a=@rq b=@rq]  (lth:ma a b)
-  ++  lte  ~/  %lte  |=  [a=@rq b=@rq]  (lte:ma a b)
-  ++  equ  ~/  %equ  |=  [a=@rq b=@rq]  (equ:ma a b)
-  ++  gte  ~/  %gte  |=  [a=@rq b=@rq]  (gte:ma a b)
-  ++  gth  ~/  %gth  |=  [a=@rq b=@rq]  (gth:ma a b)
+  ++  lth  ~/  %lth  |=  [a=@rq b=@rq]  ~|  %rq-fail  (lth:ma a b)
+  ++  lte  ~/  %lte  |=  [a=@rq b=@rq]  ~|  %rq-fail  (lte:ma a b)
+  ++  equ  ~/  %equ  |=  [a=@rq b=@rq]  ~|  %rq-fail  (equ:ma a b)
+  ++  gte  ~/  %gte  |=  [a=@rq b=@rq]  ~|  %rq-fail  (gte:ma a b)
+  ++  gth  ~/  %gth  |=  [a=@rq b=@rq]  ~|  %rq-fail  (gth:ma a b)
   ++  sig  |=  [a=@rq]  (sig:ma a)
   ++  exp  |=  [a=@rq]  (exp:ma a)
   ++  drg  |=  [a=@rq]  (drg:ma a)
@@ -666,14 +644,18 @@
     |=  [a=@rh]  (sea:ma a)
   ++  bit
     |=  [a=fn]  ^-  @rh  (bit:ma a)
+  ++  tos
+    |=  [a=@rh]  (bit:rs (sea a))
+  ++  fos
+    |=  [a=@rs]  (bit (sea:rs a))
   ::
   ++  sun  |=  [a=@u]  ^-  @rh  (sun:ma a)
   ++  san  |=  [a=@s]  ^-  @rh  (san:ma a)
-  ++  lth  |=  [a=@rh b=@rh]  (lth:ma a b)
-  ++  lte  |=  [a=@rh b=@rh]  (lte:ma a b)
-  ++  equ  |=  [a=@rh b=@rh]  (equ:ma a b)
-  ++  gte  |=  [a=@rh b=@rh]  (gte:ma a b)
-  ++  gth  |=  [a=@rh b=@rh]  (gth:ma a b)
+  ++  lth  |=  [a=@rh b=@rh]  ~|  %rh-fail  (lth:ma a b)
+  ++  lte  |=  [a=@rh b=@rh]  ~|  %rh-fail  (lte:ma a b)
+  ++  equ  |=  [a=@rh b=@rh]  ~|  %rh-fail  (equ:ma a b)
+  ++  gte  |=  [a=@rh b=@rh]  ~|  %rh-fail  (gte:ma a b)
+  ++  gth  |=  [a=@rh b=@rh]  ~|  %rh-fail  (gth:ma a b)
   ++  sig  |=  [a=@rh]  (sig:ma a)
   ++  exp  |=  [a=@rh]  (exp:ma a)
   ++  drg  |=  [a=@rh]  (drg:ma a)
