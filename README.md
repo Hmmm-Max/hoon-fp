@@ -8,16 +8,15 @@
 * Fix parsers, printing
 * Elementary functions (trigonometric, logarithm, exponent...)
 * Jets for ++rd, ++rs, ++rq (SoftFloat)
+* Jet for Dragon4
 
 ## In progress
 
-* Jet for Dragon4
 * Misc cleanup
+* Fractal demo
 
 ## Planned
 
-* Fractal demo
-* ++fl basic operation jets?
 * Elementary functions will be cleaned up, placed in a library
 
 ## Not planned ATM
